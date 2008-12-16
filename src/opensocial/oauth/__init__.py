@@ -175,7 +175,7 @@ class OAuthRequest(object):
         # combine multiple parameter sources
         if parameters is None:
             parameters = {}
-
+            
         # headers
         if headers and 'Authorization' in headers:
             auth_header = headers['Authorization']
@@ -198,7 +198,7 @@ class OAuthRequest(object):
         url_params = OAuthRequest._split_url_string(param_str)
         parameters.update(url_params)
 
-        if parameters:
+        if parameters is not None:
             return OAuthRequest(http_method, http_url, parameters)
 
         return None

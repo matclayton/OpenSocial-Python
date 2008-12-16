@@ -1,0 +1,6 @@
+Example pages using the library are located in /samples. 
+Google App Engine SDK is required to run the samples.
+(http://code.google.com/appengine)
+
+To run test, from the /tests directory run:
+python run_all_tests.py

@@ -1,42 +1,61 @@
+#!/usr/bin/python
+#
+# Copyright (C) 2007, 2008 Google Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+__author__ = 'davidbyttow@google.com (David Byttow)'
+
 
 import unittest
-import mock_http
 import opensocial
 
-from opensocial import simplejson
-from opensocial import test_data
-from opensocial.client import *
+from opensocial import *
+from opensocial import mock_http, simplejson, test_data
+
+
+TEST_CONFIG = ContainerConfig(
+    server_rest_base='http://www.foo.com/rest/')
+
 
 class TestRestRequest(unittest.TestCase):
 
-  def setUp(self):
-    self.config = ContainerConfig(server_rest_base='http://www.foo.com/rest/')
-
-  def test_make_http_request(self):
-    rest_request = RestRequest('@me/@friends')
-    http_request = rest_request.make_http_request(self.config)
-    self.assert_(http_request.method == 'GET')
-    self.assert_(http_request.url.base ==
-                 'http://www.foo.com/rest/@me/@friends')
+  def test_http_request(self):
+    rest_request = request.RestRequestInfo('@me/@friends')
+    http_request = rest_request.make_http_request(TEST_CONFIG.server_rest_base)
+    self.assertEquals('GET', http_request.get_method())
+    self.assertEquals('http://www.foo.com/rest/@me/@friends?',
+                      http_request.get_url())
 
     
 class TestRpcRequest(unittest.TestCase):
 
-  def setUp(self):
-    self.config = ContainerConfig(server_rpc_base='http://www.foo.com/rpc')
-  
   def test_make_http_request(self):
-    rpc_request = RpcRequest('people.get', params={'userId': '101',
-                                                   'groupId': '@friends'})
-    http_request = rpc_request.make_http_request(self.config)
-    self.assert_(http_request.method == 'POST')
-    self.assert_(http_request.url.base == 'http://www.foo.com/rpc')
+    rpc_request = RpcRequestInfo('people.get',
+                                params={'userId': '101',
+                                        'groupId': '@friends'},
+                                id='foo')
+    http_request = rpc_request.make_http_request('http://www.foo.com/rpc')
+    self.assertEquals('POST', http_request.get_method())
+    self.assertEquals('http://www.foo.com/rpc?', http_request.get_url())
     json_body = {
       'params': {'userId': '101', 'groupId': '@friends'},
       'method': 'people.get',
+      'id': 'foo',
     }
     post_body = simplejson.dumps(json_body)
-    self.assert_(http_request.post_body == post_body)
+    self.assertEquals(post_body, http_request.post_body)
 
 
 class TestContainerContext(unittest.TestCase):
@@ -51,43 +70,31 @@ class TestContainerContext(unittest.TestCase):
 
   noauth_response = http.Response(200, simplejson.dumps(test_data.NO_AUTH))
 
+  def add_canned_response(self, request_url, http_response):
+    http_request = http.Request(request_url)
+    self.urlfetch.add_response(http_request, http_response)
+
   def setUp(self):
-    self.config = ContainerConfig(server_rest_base='http://www.foo.com/rest/')
     self.urlfetch = mock_http.MockUrlFetch()
-    self.container = ContainerContext(self.config, self.urlfetch)
+    self.container = ContainerContext(TEST_CONFIG, self.urlfetch)
 
-    self.urlfetch.add_response(
-        http.Request(http.Url('http://www.foo.com/rest/people/@me/@self')),
-        TestContainerContext.viewer_response)
+    self.add_canned_response('http://www.foo.com/rest/people/@me/@self',
+                             TestContainerContext.viewer_response)
 
-    self.urlfetch.add_response(
-        http.Request(http.Url('http://www.foo.com/rest/people/@me/@friends')),
-        TestContainerContext.friends_response)
+    self.add_canned_response('http://www.foo.com/rest/people/@me/@friends',
+                             TestContainerContext.friends_response)
 
-    self.urlfetch.add_response(
-        http.Request(http.Url('http://www.foo.com/rest/people/102/@friends')),
-        TestContainerContext.noauth_response)
+    self.add_canned_response('http://www.foo.com/rest/people/102/@friends',
+                             TestContainerContext.noauth_response)
 
-    self.urlfetch.add_response(
-        http.Request(http.Url('http://www.foo.com/rest/people/103/@friends')),
-        http.Response(404, 'Error'))
+    self.add_canned_response('http://www.foo.com/rest/people/103/@friends',
+                              http.Response(404, 'Error'))
 
   def test_supports_rpc(self):
     self.assertEqual(False, self.container.supports_rpc())
+    test_rpc = ContainerContext(ContainerConfig(server_rpc_base='test'))
+    self.assertEqual(True, test_rpc.supports_rpc())
     
-  def test_rest_request(self):
-    request = self.container._create_rest_request(('foo', 'bar'))
-    self.assertEqual('foo/bar', request.path)
-    
-  def test_rpc_request(self):
-    request = self.container._create_rpc_request('people.get')
-    self.assertEqual('people.get', request.params.get('method'))
-    params = {'userId': '@me', 'groupId': '@friends'}
-    request = self.container._create_rpc_request('people.get', params)
-    args = request.params.get('params')
-    self.assertEqual('@me', args.get('userId'))
-    self.assertEqual('@friends', args.get('groupId'))
-
   def test_fetch_person(self):
     person = self.container.fetch_person('@me')
     self.assertEqual(test_data.VIEWER.get_id(), person.get_id())

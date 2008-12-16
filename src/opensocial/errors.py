@@ -15,19 +15,32 @@
 # limitations under the License.
 
 
+"""Errors used on the Python opensocial client libraries.
+"""
+
+
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
-from distutils.core import setup
+class Error(Exception):
+  """Base opensocial.client error type.
+  """
 
-setup(
-    name='opensocial.py',
-    version='0.1.0',
-    description='Python client library for OpenSocial data APIs',
-    author='David Byttow',
-    author_email='davidbyttow@google.com',
-    license='Apache 2.0',
-    url='http://code.google.com/p/opensocial-python-client',
-    packages=['opensocial', 'opensocial.oauth'],
-    package_dir={'opensocial': 'src/opensocial'}
-)
+class ConfigError(Error):
+  """Raised when the client has not been configured properly.
+  """
+  
+
+class BadResponse(Error):
+  """Raised when the status code is not OK or data returned is invalid.
+  """
+
+
+class BadRequest(Error):
+  """Raised when a malformed request is detected.
+  """
+
+
+class UnauthorizedRequest(Error):
+  """Raised when a request failed due to bad authorization credentials.
+  """
