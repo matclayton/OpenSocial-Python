@@ -18,12 +18,12 @@
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
-import data
-import http
-import logging
 import md5
 import random
 import time
+
+import data
+import http
 
 from opensocial import simplejson
 
@@ -34,6 +34,7 @@ def generate_uuid(*args):
   Args: Any arguments used to help make this uuid more unique.
   
   Returns: A 128-bit hex identifier.
+
   """
   t = long(time.time() * 1000)
   r = long(random.random() * 1000000000000000L)
@@ -43,10 +44,9 @@ def generate_uuid(*args):
 
 
 class Request(object):
-  """Represents an OpenSocial request that can be processed via RPC or REST.
-  """
+  """Represents an OpenSocial request that can be processed via RPC or REST."""
   
-  def __init__(self, rest_request, rpc_request, params={}):
+  def __init__(self, rest_request, rpc_request):
     self.rest_request = rest_request
     self.rpc_request = rpc_request
     
@@ -55,6 +55,7 @@ class Request(object):
     
     Args:
       url_base: str The base REST URL.
+
     """
     return self.rest_request.make_http_request(url_base)
   
@@ -63,19 +64,20 @@ class Request(object):
     
     Args:
       url_base: str The base RPC URL.
+
     """
     return self.rpc_request.make_http_request(url_base)
 
 
 class FetchPeopleRequest(Request):    
-  """A request for handling fetching a collection of people.
-  """
+  """A request for handling fetching a collection of people."""
   
   def __init__(self, user_id, group_id, params={}, id=None):
+    params.update({'userId': user_id,
+                   'groupId': group_id})
     rest_request = RestRequestInfo('/'.join(('people', user_id, group_id)))
-    rpc_request = RpcRequestInfo('people.get', params={'userId': user_id,
-                                                       'groupId': group_id})
-    super(FetchPeopleRequest, self).__init__(rest_request, rpc_request, id)
+    rpc_request = RpcRequestInfo('people.get', params=params)
+    super(FetchPeopleRequest, self).__init__(rest_request, rpc_request)
     
   def process_json(self, json):
     """Construct the appropriate OpenSocial object from a JSON dict.
@@ -84,16 +86,17 @@ class FetchPeopleRequest(Request):
       json: dict The JSON structure.
       
     Returns: a Collection of Person objects.
+
     """
     return data.Collection.parse_json(json, data.Person)
 
     
 class FetchPersonRequest(FetchPeopleRequest):
-  """A request for handling fetching a single person by id.
-  """
+  """A request for handling fetching a single person by id."""
 
   def __init__(self, user_id, params={}, id=None):
-    super(FetchPersonRequest, self).__init__(user_id, '@self', params, id)
+    super(FetchPersonRequest, self).__init__(user_id, '@self', 
+                                             params=params, id=id)
 
   def process_json(self, json):
     """Construct the appropriate OpenSocial object from a JSON dict.
@@ -102,13 +105,13 @@ class FetchPersonRequest(FetchPeopleRequest):
       json: dict The JSON structure.
       
     Returns: A Person object.
+
     """
     return data.Person.parse_json(json)
   
 
 class RestRequestInfo(object):
-  """Represents a pending REST request.
-  """
+  """Represents a pending REST request."""
 
   def __init__(self, path, method='GET', fields=None):
     self.method = method
@@ -122,14 +125,14 @@ class RestRequestInfo(object):
       url_base: str The base REST URL.
     
     Returns: The http.Request object.
+
     """
     url = url_base + self.path
     return http.Request(url, method=self.method)
 
 
 class RpcRequestInfo(object):
-  """Represents a pending RPC request.
-  """
+  """Represents a pending RPC request."""
 
   def __init__(self, method, params, id=None):
     self.method = method
@@ -143,6 +146,7 @@ class RpcRequestInfo(object):
       url_base: str The base RPC URL.
     
     Returns: The http.Request object.
+
     """
     if self.id is None:
       self.id = generate_uuid(url_base) 
@@ -156,8 +160,7 @@ class RpcRequestInfo(object):
 
 
 class RequestBatch(object):
-  """This class will manage the batching of requests.
-  """
+  """This class will manage the batching of requests."""
   
   def __init__(self):
     self.requests = {}
@@ -169,6 +172,7 @@ class RequestBatch(object):
     Args:
       key: str A unique key to pair with the result of this request.
       request: obj The request object.
+
     """
     self.requests[key] = request
 
@@ -177,6 +181,7 @@ class RequestBatch(object):
     
     Args:
       key: str The key to retrieve.
+
     """
     return self.data.get(key)
 
@@ -185,6 +190,7 @@ class RequestBatch(object):
     
     Args:
       container: The container to execute this batch on.
+
     """
     container.send_request_batch(self, False)
 

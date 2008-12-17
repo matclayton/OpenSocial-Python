@@ -18,8 +18,8 @@
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
+import httplib
 import unittest
-import opensocial
 
 from opensocial import *
 from opensocial import mock_http, simplejson, test_data
@@ -60,15 +60,15 @@ class TestRpcRequest(unittest.TestCase):
 
 class TestContainerContext(unittest.TestCase):
 
-  viewer_response = http.Response(200, simplejson.dumps(
+  viewer_response = http.Response(httplib.OK, simplejson.dumps(
       {'entry': test_data.VIEWER_FIELDS}))
 
-  friends_response = http.Response(200, simplejson.dumps(
+  friends_response = http.Response(httplib.OK, simplejson.dumps(
       {'startIndex': 0,
        'totalResults': len(test_data.FRIEND_COLLECTION_FIELDS),
        'entry': test_data.FRIEND_COLLECTION_FIELDS}))
 
-  noauth_response = http.Response(200, simplejson.dumps(test_data.NO_AUTH))
+  noauth_response = http.Response(httplib.OK, simplejson.dumps(test_data.NO_AUTH))
 
   def add_canned_response(self, request_url, http_response):
     http_request = http.Request(request_url)
@@ -88,7 +88,7 @@ class TestContainerContext(unittest.TestCase):
                              TestContainerContext.noauth_response)
 
     self.add_canned_response('http://www.foo.com/rest/people/103/@friends',
-                              http.Response(404, 'Error'))
+                              http.Response(httplib.NOT_FOUND, 'Error'))
 
   def test_supports_rpc(self):
     self.assertEqual(False, self.container.supports_rpc())
@@ -109,11 +109,14 @@ class TestContainerContext(unittest.TestCase):
       person = friends.items[i]
       test_person = test_data.FRIENDS[i]
       self.assertEqual(person.get_id(), test_person.get_id())
-      self.assertEqual(person.get_display_name(), test_person.get_display_name())
+      self.assertEqual(person.get_display_name(),
+                       test_person.get_display_name())
       
   def test_unauthorized_request(self):
-    self.assertRaises(UnauthorizedRequest, self.container.fetch_friends, '102')
+    self.assertRaises(UnauthorizedRequestError,
+                      self.container.fetch_friends,
+                      '102')
  
   def test_bad_request(self):
-    self.assertRaises(BadRequest, self.container.fetch_friends, '103')
-    self.assertRaises(BadRequest, self.container.fetch_friends, '??')
+    self.assertRaises(BadRequestError, self.container.fetch_friends, '103')
+    self.assertRaises(BadRequestError, self.container.fetch_friends, '??')

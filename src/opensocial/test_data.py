@@ -15,12 +15,13 @@
 # limitations under the License.
 
 
-"""This file provides test data explicitly for usage in library unit tests.
-""" 
+"""This file provides test data explicitly for usage in library unit tests.""" 
 
 
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
+
+import httplib
 
 import data
 import simplejson
@@ -54,4 +55,4 @@ for friend_fields in FRIEND_COLLECTION_FIELDS:
 
 FRIEND_COLLECTION = data.Collection(FRIENDS, 0, len(FRIENDS))
 
-NO_AUTH = { 'code': 401 }
+NO_AUTH = { 'code': httplib.UNAUTHORIZED }

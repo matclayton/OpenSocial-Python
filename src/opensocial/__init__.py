@@ -18,19 +18,19 @@
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
-import http
-import logging
+import httplib
 import urllib
+
+import http
 
 from data import *
 from errors import *
-from request import *
 from opensocial import oauth, simplejson
+from request import *
 
 
 class ContainerConfig(object):
-  """Setup parameters for connecting to a container.
-  """
+  """Setup parameters for connecting to a container."""
   
   def __init__(self, oauth_consumer_key=None, oauth_consumer_secret=None,
                server_rpc_base=None, server_rest_base=None):
@@ -42,6 +42,7 @@ class ContainerConfig(object):
     At least one of server_rpc_base or server_rest_base should be specified,
     otherwise, all requests will fail. If both are supplied, the container
     will attempt to default to rpc and fall back on REST.
+
     """
     self.oauth_consumer_key = oauth_consumer_key 
     self.oauth_consumer_secret = oauth_consumer_secret
@@ -55,6 +56,7 @@ class ContainerContext(object):
   This class manages the connection to a specific container and provides
   methods for fetching common data via either te REST or RPC protocol, depending
   on the configuration.
+
   """
   
   def __init__(self, config, url_fetch=None):
@@ -66,6 +68,7 @@ class ContainerContext(object):
     Args:
       config: The ContainerConfig to use for this connection.
       url_fetch: (optional) An implementation of the UrlFetch interface.
+
     """
     self.config = config
     self.url_fetch = url_fetch or http.get_default_urlfetch()
@@ -80,6 +83,7 @@ class ContainerContext(object):
     """Tells whether or not the container was setup for RPC protocol.
     
     Returns: bool Is this container using the RPC protocol?
+
     """
     return self.config.server_rpc_base is not None
   
@@ -90,6 +94,7 @@ class ContainerContext(object):
       user_id: str The person's container-specific id.
       
     Returns: A Person object representing the specified user id.
+
     """
     request = FetchPersonRequest(user_id)
     return self.send_request(request)
@@ -102,6 +107,7 @@ class ContainerContext(object):
       friends.
       
     Returns: A Collection of Person objects.
+
     """
     request = FetchPeopleRequest(user_id, '@friends')
     return self.send_request(request)
@@ -109,12 +115,16 @@ class ContainerContext(object):
 
   def send_request(self, request, use_rest=False):
     """Sends the request.
+    
+    May throw a BadRequestError, BadResponseError or 
+    UnauthorizedRequestError exceptions.
 
     Args:
       request: A Request object.
       use_rest: bool (optional) If True, will just use the REST protocol.
       
-    Returns: The OpenSocial requested.
+    Returns: The OpenSocial object returned from the container.
+
     """
     http_request = None
     if not use_rest and self.supports_rpc():
@@ -135,27 +145,30 @@ class ContainerContext(object):
     """Send a batch of requests.
     
     Batches are only useful when RPC is supported. Otherwise, all requests
-    are sent synchronously.
+    are sent synchronously. May throw a BadRequest, BadResponse or
+    UnauthorizedRequest exceptions.
+
     TODO: Put all requests together if RPC is supported.
     
     Args:
       batch: The RequestBatch object.
       use_rest: bool (optional) If True, will just use the REST protocol.
+
     """
     for key, request in batch.requests.iteritems():
       batch._set_data(key, self.send_request(request, use_rest))
       
   def _handle_response(self, http_response):
-    # If status code "OK", then we can safely inspect the return JSON.
-    if http_response.status == 200:
+    """ If status code "OK", then we can safely inspect the returned JSON."""
+    if http_response.status == httplib.OK:
       json = simplejson.loads(http_response.content)
       # Check for any JSON-RPC 2.0 errors.
       if 'code' in json:
         code = json.get('code')
-        if code == 401:
-          raise UnauthorizedRequest()
+        if code == httplib.UNAUTHORIZED:
+          raise UnauthorizedRequestError(http_response)
         else:
-          raise BadResponse()
+          raise BadResponseError(http_response)
       return json
     else:
-      raise BadRequest()
+      raise BadRequestError(http_response)

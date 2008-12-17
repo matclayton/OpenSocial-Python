@@ -35,6 +35,7 @@ def get_default_urlfetch():
   will be created.
   
   TODO: Find a better way to determine if this is an AppEngine environment.
+
   """
   if sys.modules.has_key('google.appengine.api.urlfetch'):
     return AppEngineUrlFetch()
@@ -42,8 +43,7 @@ def get_default_urlfetch():
 
 
 class UrlFetch(object):
-  """An API which provides a simple interface for performing HTTP requests.
-  """
+  """An API which provides a simple interface for performing HTTP requests."""
 
   def fetch(self, request):
     """TODO: Implement me."""
@@ -51,8 +51,7 @@ class UrlFetch(object):
 
 
 class AppEngineUrlFetch(UrlFetch):
-  """Implementation of UrlFetch using AppEngine's URLFetch API.
-  """
+  """Implementation of UrlFetch using AppEngine's URLFetch API."""
 
   def fetch(self, request):
     """Performs a synchronous fetch request.
@@ -61,6 +60,7 @@ class AppEngineUrlFetch(UrlFetch):
       request: The http.Request object that contains the request information.
     
     Returns: An http.Response object.
+
     """
     method = request.get_method()
     url = request.get_url()
@@ -79,6 +79,7 @@ class Request(object):
   """This object is used to make a UrlFetch interface request.
   
   It also will sign a request with OAuth.
+
   """
 
   def __init__(self, url, method='GET', signed_params=None, post_body=None):
@@ -92,6 +93,7 @@ class Request(object):
     Args:
       consumer: The OAuthConsumer set with a key and secret.
       signature_method: A supported method for signing the built request.
+
     """
     params = {
       'oauth_consumer_key': consumer.key,
@@ -107,6 +109,7 @@ class Request(object):
     
     Args:
       params: dict A dict of parameters.
+
     """
     for key, value in params.iteritems():
       self.oauth_request.set_parameter(key, value)
@@ -118,6 +121,7 @@ class Request(object):
       key: str The key of the requested parameter.
       
     Returns: The parameter value.
+
     """
     return self.oauth_request.get_parameter(keys)
   
@@ -125,6 +129,7 @@ class Request(object):
     """Returns the HTTP normalized method of this request.
     
     Returns: The normalized HTTP method.
+
     """
     return self.oauth_request.get_normalized_http_method()
   
@@ -132,6 +137,7 @@ class Request(object):
     """Get the full URL of this request, including the post body.
     
     Returns: The full URL for this request.
+
     """
     return self.oauth_request.to_url()
   
@@ -139,12 +145,13 @@ class Request(object):
     """Get the normalized URL for this request.
     
     Returns: The normalized URL for this request.
+
     """
     return self.oauth_request.get_normalized_http_url()
 
+
 class Response(object):
-  """Represents a response from the UrlFetch interface.
-  """
+  """Represents a response from the UrlFetch interface."""
 
   def __init__(self, status, content):
     self.status = status

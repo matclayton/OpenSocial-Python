@@ -14,26 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+__author__ = 'davidbyttow@google.com (David Byttow)'
+
+
 import logging
 import wsgiref
 import wsgiref.handlers
 
 from opensocial import *
-from opensocial import request
 from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
+
 
 class Handler(webapp.RequestHandler):
 
   def get(self):
-#    self.test_friends('03067092798963641994')
     self.test_batch('03067092798963641994')
  
   def get_container(self):
     config = ContainerConfig(oauth_consumer_key='orkut.com:623061448914',
         oauth_consumer_secret='uynAeXiWTisflWX99KU1D2q5',
-        server_rest_base='http://sandbox.orkut.com/social/rest/',)
-        #server_rpc_base='http://sandbox.orkut.com/social/rpc')
+        server_rest_base='http://sandbox.orkut.com/social/rest/')
     return ContainerContext(config)
     
   def test_friends(self, user_id):
@@ -50,7 +51,8 @@ class Handler(webapp.RequestHandler):
     
     batch = RequestBatch()
     batch.add_request('me', request.FetchPersonRequest(user_id))
-    batch.add_request('friends', request.FetchPeopleRequest(user_id, '@friends'))
+    batch.add_request('friends',
+                      request.FetchPeopleRequest(user_id, '@friends'))
     batch.send(container)
     
     me = batch.get('me')
@@ -58,17 +60,17 @@ class Handler(webapp.RequestHandler):
     
     self.response.out.write('<h3>Test</h3>')
     self.output(me, friends)
-    
 
   def output(self, me, friends):
     self.response.out.write('%s\'s Friends: ' % me.get_display_name())
-    if len(friends.items) == 0:
+    if friends.items == 0:
       self.response.out.write('You have no friends.')
     else:
       self.response.out.write('<ul>')
       for person in friends.items:
         self.response.out.write('<li>%s</li>' % person.get_display_name())
       self.response.out.write('</ul>')
+
 
 def main():
   application = webapp.WSGIApplication([

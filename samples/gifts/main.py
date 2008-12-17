@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+__author__ = 'davidbyttow@google.com (David Byttow)'
+
+
 import logging
 import random
 import wsgiref
@@ -22,7 +26,7 @@ import wsgiref.handlers
 from opensocial import *
 from google.appengine.ext import db
 from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
+
 
 GIFTS = {
   'snakes': { 'name': 'some snakes', 'img': 'public/snakes.png' },
@@ -30,6 +34,7 @@ GIFTS = {
   'grail': { 'name': 'a holy grail', 'img': 'public/grail.png' },
 }
 USER_ID = '03067092798963641994'
+
 
 class Gift(db.Model):
 
@@ -60,6 +65,7 @@ class GiftsHandler(webapp.RequestHandler):
   """The gifts application handler.
   
   TODO: Use Django templates instead of HTML strings.
+
   """
   
   def get(self):
@@ -68,104 +74,103 @@ class GiftsHandler(webapp.RequestHandler):
     query = Gift.all()
     query.order('-sent_date')
     gifts = query.fetch(1000)
+    
+    html = []
 
-    html = """
+    html.append("""
 <html>
   <head>
     <title>OpenSocial - RESTful Gifts</title>
     <link rel="stylesheet" type="text/css" href="public/style.css">
   </head>
   <body>
-"""
+""")
 
-    self.output(html)
-    self.output("""
+    html.append("""
 Hello, <b>%s</b>, this application allows you to send and receives gifts with your
 friends. Enjoy!<br/><br/>
 """ % social_data.me.get_display_name())
 
-    self.output('<form method="POST" action="/index.html">')
-    self.output('Send <select name="gift">')
+    html.append('<form method="POST" action="/index.html">')
+    html.append('Send <select name="gift">')
     for key, gift in GIFTS.iteritems():
-      self.output('<option value="%s">%s</option>' % (key, gift.get('name')))
-    self.output('<option value="random">a random gift</option>')
-    self.output('</select> to <select name="to">')
+      html.append('<option value="%s">%s</option>' % (key, gift.get('name')))
+    html.append('<option value="random">a random gift</option>')
+    html.append('</select> to <select name="to">')
     for friend in social_data.friends.items:
-      self.output('<option value="%s">%s</option>' %
+      html.append('<option value="%s">%s</option>' %
                   (friend.get_id(), friend.get_display_name()))
-    self.output('</select> <input type="submit" value="Send It!"/></form>')
+    html.append('</select> <input type="submit" value="Send It!"/></form>')
 
-    num_gifts_received = 0
-    num_gifts_sent = 0
+    gifts_received = []
+    gifts_sent = []
     for gift in gifts:
       if gift.sent_to == social_data.me.get_id():
-        num_gifts_received += 1
+        gifts_received.append(gift)
       if gift.sent_from == social_data.me.get_id():
-        num_gifts_sent += 1
+        gifts_sent.append(gift)
 
-    self.output("""
+    html.append("""
 <table class="layout"><tr><td>
 <table class="list">
 <tr><td colspan="3" class="header">Gifts Sent</td></tr>
 """)
-    if num_gifts_sent > 0:
-      self.output("""
+    if gifts_sent:
+      html.append("""
 <tr class="sub-header"><td>Date</td><td>To</td><td>Gift</td></tr>
 """)
-      for gift in gifts:
-        if gift.sent_from == social_data.me.get_id():
-          gift_data = GIFTS.get(gift.name)
-          friend = social_data.get_friend(gift.sent_to)
-          if gift and friend:
-            self.output('<tr>')
-            self.output('<td>%s</td>' % gift.sent_date.strftime('%m-%d-%Y'))
-            self.output('<td><img src="%s" class="thumbnail"><br/>%s</td>' %
-                        (friend.get_field('thumbnailUrl'),
-                         friend.get_display_name()))
-            self.output('<td><img src="%s" class="gift"/><br/>%s</td>' %
-                        (gift_data.get('img'), gift_data.get('name')))
-            self.output('</tr>')
+      for gift in gifts_sent:
+        gift_data = GIFTS.get(gift.name)
+        friend = social_data.get_friend(gift.sent_to)
+        if gift and friend:
+          html.append('<tr>')
+          html.append('<td>%s</td>' % gift.sent_date.strftime('%m-%d-%Y'))
+          html.append('<td><img src="%s" class="thumbnail"><br/>%s</td>' %
+                      (friend.get_field('thumbnailUrl'),
+                       friend.get_display_name()))
+          html.append('<td><img src="%s" class="gift"/><br/>%s</td>' %
+                      (gift_data.get('img'), gift_data.get('name')))
+          html.append('</tr>')
     else:
-      self.output("""
+      html.append("""
 <tr><td colspan="3">You have not sent any gifts... why not? </td></tr>
 """)
 
-    self.output("""
+    html.append("""
 </table>
 </td><td>
 <table class="list">
 <tr><td colspan="3" class="header">Gifts Received</td></tr>
 """)
     
-    if num_gifts_received > 0:
-      self.output("""
+    if gifts_received:
+      html.append("""
 <tr class="sub-header"><td>Date</td><td>From</td><td>Gift</td></tr>
 """)
-      for gift in gifts:
-        if gift.sent_to == social_data.me.get_id():
-          gift_data = GIFTS.get(gift.name)
-          friend = social_data.get_friend(gift.sent_from)
-          if gift and friend:
-            self.output('<tr>')
-            self.output('<td>%s</td>' % gift.sent_date.strftime('%m-%d-%Y'))
-            self.output('<td><img src="%s" class="thumbnail"><br/>%s</td>' %
-                        (friend.get_field('thumbnailUrl'),
-                         friend.get_display_name()))
-            self.output('<td><img src="%s" class="gift"/><br/>%s</td>' %
-                        (gift_data.get('img'), gift_data.get('name')))
-            self.output('</tr>')
+      for gift in gifts_received:
+        gift_data = GIFTS.get(gift.name)
+        friend = social_data.get_friend(gift.sent_from)
+        if gift and friend:
+          html.append('<tr>')
+          html.append('<td>%s</td>' % gift.sent_date.strftime('%m-%d-%Y'))
+          html.append('<td><img src="%s" class="thumbnail"><br/>%s</td>' %
+                      (friend.get_field('thumbnailUrl'),
+                       friend.get_display_name()))
+          html.append('<td><img src="%s" class="gift"/><br/>%s</td>' %
+                      (gift_data.get('img'), gift_data.get('name')))
+          html.append('</tr>')
     else:
-      self.output("""
+      html.append("""
 <tr><td colspan="3">You have not received any gifts. :-( </td></tr>
 """)
 
-    html = """
+    html.append("""
 </table>
     </td></tr></table>
   </body>
 </html>
-"""
-    self.output(html)
+""")
+    self.response.out.write(''.join(html))
     
   def post(self):
     random.seed()
@@ -183,11 +188,8 @@ friends. Enjoy!<br/><br/>
                       sent_from=social_data.me.get_id())
       new_gift.put()
     self.redirect('/')
+
     
-  def output(self, html):
-    self.response.out.write(html)
-
-
 def main():
   application = webapp.WSGIApplication([
       ('.*', GiftsHandler),

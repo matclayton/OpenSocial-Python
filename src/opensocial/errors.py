@@ -15,32 +15,33 @@
 # limitations under the License.
 
 
-"""Errors used on the Python opensocial client libraries.
-"""
+"""Errors used on the Python opensocial client libraries."""
 
 
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
 class Error(Exception):
-  """Base opensocial.client error type.
-  """
+  """Base opensocial.client error type."""
+
 
 class ConfigError(Error):
-  """Raised when the client has not been configured properly.
-  """
-  
-
-class BadResponse(Error):
-  """Raised when the status code is not OK or data returned is invalid.
-  """
+  """Raised when the client has not been configured properly."""
 
 
-class BadRequest(Error):
-  """Raised when a malformed request is detected.
-  """
+class BadResponseError(Error):
+  """Raised when the status code is not OK or data returned is invalid."""
+  def __init__(self, response):
+    self.response = response
 
 
-class UnauthorizedRequest(Error):
-  """Raised when a request failed due to bad authorization credentials.
-  """
+class BadRequestError(Error):
+  """Raised when a malformed request is detected."""
+  def __init__(self, response):
+    self.response = response
+
+
+class UnauthorizedRequestError(Error):
+  """Raised when a request failed due to bad authorization credentials."""
+  def __init__(self, response):
+    self.response = response

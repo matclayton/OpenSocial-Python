@@ -18,6 +18,7 @@
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
+import httplib
 import urllib
 
 from opensocial import http
@@ -35,11 +36,12 @@ class MockUrlFetch(http.UrlFetch):
   
   Used to set canned responses for particular requests. The default canned
   response (Error 500) will be returned if a response is not found.
+
   """
   
   def __init__(self):
     self.records = []
-    self.default_response = http.Response(500, '')
+    self.default_response = http.Response(httplib.INTERNAL_SERVER_ERROR, '')
 
   def add_response(self, request, response):
     """Adds a canned response for a given request.
@@ -47,6 +49,7 @@ class MockUrlFetch(http.UrlFetch):
     Args:
       request: An http.Request object used to trigger this response.
       response: An http.Response object that will be returned.
+
     """
     self.records.append(ResponseRecord(request, response))
 
@@ -55,10 +58,10 @@ class MockUrlFetch(http.UrlFetch):
     
     Looks up the details of the specified request and returns a canned
     response if one is found, otherwise 500 error.
+
     """
     response = self._lookup_request(request)
     return response
-
 
   def _lookup_request(self, request):
     url = request.get_url()

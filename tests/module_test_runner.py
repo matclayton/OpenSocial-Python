@@ -28,8 +28,7 @@ class ModuleTestRunner(object):
     self.settings = module_test_settings or {}
     
   def RunAllTests(self):
-    """Executes all tests present in the list of modules.
-    """
+    """Executes all tests present in the list of modules."""
     runner = unittest.TextTestRunner()
     for module in self.modules:
       for setting, value in self.settings.iteritems():
