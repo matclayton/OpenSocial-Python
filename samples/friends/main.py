@@ -34,7 +34,8 @@ class Handler(webapp.RequestHandler):
   def get_container(self):
     config = ContainerConfig(oauth_consumer_key='orkut.com:623061448914',
         oauth_consumer_secret='uynAeXiWTisflWX99KU1D2q5',
-        server_rest_base='http://sandbox.orkut.com/social/rest/')
+        server_rest_base='http://sandbox.orkut.com/social/rest/',
+        server_rpc_base='http://sandbox.orkut.com/social/rpc/')
     return ContainerContext(config)
     
   def test_friends(self, user_id):

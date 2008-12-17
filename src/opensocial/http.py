@@ -22,6 +22,7 @@ import sys
 import urllib
 
 from opensocial import oauth
+from opensocial import simplejson
 try:
   from google.appengine.api import urlfetch
 except:
@@ -64,8 +65,8 @@ class AppEngineUrlFetch(UrlFetch):
     """
     method = request.get_method()
     url = request.get_url()
-    body = request.post_body
-    headers = { 'User-Agent': 'OpenSocial Python Client (AppEngine)' }
+    body = request.get_post_body()
+    headers = request.get_headers()
     result = urlfetch.fetch(
         method=method,
         url=url,
@@ -83,7 +84,7 @@ class Request(object):
   """
 
   def __init__(self, url, method='GET', signed_params=None, post_body=None):
-    self.post_body = post_body or ''
+    self.post_body = post_body or None
     self.oauth_request = oauth.OAuthRequest.from_request(method, url,
         parameters=signed_params)
     
@@ -101,8 +102,21 @@ class Request(object):
       'oauth_nonce': oauth.generate_nonce(),
       'oauth_version': oauth.OAuthRequest.version,
     }
+    
+    """N.B.: This is a workaround for fact that POST body is included in the
+    signing of this request.
+
+    """
+    body = self.get_post_body()
+    if body:
+      params[body] = ''
+
     self.set_parameters(params)
     self.oauth_request.sign_request(signature_method, consumer, None)
+    
+    """Part II of the workaround above, remove the body from the parameters."""
+    if body:
+      del self.oauth_request.parameters[body]
   
   def set_parameters(self, params):
     """Set the parameters for this request.
@@ -148,7 +162,19 @@ class Request(object):
 
     """
     return self.oauth_request.get_normalized_http_url()
+  
+  def get_headers(self):
+    headers = {}
+    if self.post_body:
+      headers['Content-Type'] = 'application/json'
+    return headers
 
+
+  def get_post_body(self):
+    """Get the JSON encoded post body."""
+    if self.post_body:
+      return simplejson.dumps(self.post_body)
+    return None
 
 class Response(object):
   """Represents a response from the UrlFetch interface."""

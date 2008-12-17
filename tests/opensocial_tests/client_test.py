@@ -55,7 +55,7 @@ class TestRpcRequest(unittest.TestCase):
       'id': 'foo',
     }
     post_body = simplejson.dumps(json_body)
-    self.assertEquals(post_body, http_request.post_body)
+    self.assertEquals(post_body, http_request.get_post_body())
 
 
 class TestContainerContext(unittest.TestCase):
@@ -92,8 +92,6 @@ class TestContainerContext(unittest.TestCase):
 
   def test_supports_rpc(self):
     self.assertEqual(False, self.container.supports_rpc())
-    test_rpc = ContainerContext(ContainerConfig(server_rpc_base='test'))
-    self.assertEqual(True, test_rpc.supports_rpc())
     
   def test_fetch_person(self):
     person = self.container.fetch_person('@me')

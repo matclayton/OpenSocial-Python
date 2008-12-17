@@ -155,7 +155,7 @@ class RpcRequestInfo(object):
       'params': self.params,
       'id': self.id,
     }
-    json_body = simplejson.dumps(rpc_body)
+    json_body = rpc_body
     return http.Request(url_base, method='POST', post_body=json_body)
 
 

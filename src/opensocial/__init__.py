@@ -83,9 +83,13 @@ class ContainerContext(object):
     """Tells whether or not the container was setup for RPC protocol.
     
     Returns: bool Is this container using the RPC protocol?
+    
+    TODO: Figure out what is going wrong with POST body signing, fix and
+    re-enable this.
 
     """
-    return self.config.server_rpc_base is not None
+    return False
+#    return self.config.server_rpc_base is not None
   
   def fetch_person(self, user_id='@me'):
     """Fetches a person by user id.
@@ -149,7 +153,7 @@ class ContainerContext(object):
     UnauthorizedRequest exceptions.
 
     TODO: Put all requests together if RPC is supported.
-    
+
     Args:
       batch: The RequestBatch object.
       use_rest: bool (optional) If True, will just use the REST protocol.
