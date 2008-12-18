@@ -33,6 +33,7 @@ GIFTS = {
   'dictator': { 'name': 'a benevolent dictator', 'img': 'public/dictator.png' },
   'grail': { 'name': 'a holy grail', 'img': 'public/grail.png' },
 }
+
 USER_ID = '03067092798963641994'
 
 

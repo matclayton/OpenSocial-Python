@@ -18,21 +18,21 @@
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
-import sys
 import unittest
-import getopt
-import getpass
 
-import module_test_runner
-import opensocial_tests.client_test
-import opensocial_tests.orkut_test
+import opensocial
 
-def RunAllTests():
-  test_runner = module_test_runner.ModuleTestRunner()
-  test_runner.modules = [opensocial_tests.client_test,
-                         opensocial_tests.orkut_test]
-  test_runner.RunAllTests()
-  pass
 
-if __name__ == '__main__':
-  RunAllTests()
+class TestOrkut(unittest.TestCase):
+  
+  def setUp(self):
+    self.config = opensocial.ContainerConfig(
+        oauth_consumer_key='orkut.com:623061448914',
+        oauth_consumer_secret='uynAeXiWTisflWX99KU1D2q5',
+        server_rest_base='http://sandbox.orkut.com/social/rest/')
+    self.container = opensocial.ContainerContext(self.config)
+    self.user_id = '03067092798963641994'
+
+  def test_fetch_person(self):
+    self.me = self.container.fetch_person(self.user_id)
+    self.assertEquals(self.user_id, self.me.get_id())

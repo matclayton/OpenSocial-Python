@@ -18,8 +18,9 @@
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
+import httplib
 import sys
-import urllib
+import urllib2
 
 from opensocial import oauth
 from opensocial import simplejson
@@ -46,9 +47,28 @@ def get_default_urlfetch():
 class UrlFetch(object):
   """An API which provides a simple interface for performing HTTP requests."""
 
-  def fetch(self, request):
-    """TODO: Implement me."""
-    assert False, "Not yet implemented"
+  def fetch(self, request):    
+    """Performs a synchronous fetch request.
+    
+    TODO: Handle HTTPMethod
+    
+    Args:
+      request: The http.Request object that contains the request information.
+    
+    Returns: An http.Response object.
+    
+    """
+    method = request.get_method()
+    headers = request.get_headers()
+    req = urllib2.Request(request.get_url(), 
+                          data=request.get_post_body(), 
+                          headers=request.get_headers())
+    try:
+      f = urllib2.urlopen(req)
+      result = f.read()
+      return Response(httplib.OK, result)
+    except urllib2.URLError, e:
+      return Response(e.reason.code, '')
 
 
 class AppEngineUrlFetch(UrlFetch):
