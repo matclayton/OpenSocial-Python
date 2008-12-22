@@ -23,8 +23,8 @@ import logging
 import sys
 import urllib2
 
-from opensocial import oauth
-from opensocial import simplejson
+import oauth
+import simplejson
 try:
   from google.appengine.api import urlfetch
 except:

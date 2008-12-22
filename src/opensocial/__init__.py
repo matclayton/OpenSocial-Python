@@ -23,10 +23,11 @@ import urllib
 import urlparse
 
 import http
+import oauth
+import simplejson
 
 from data import *
 from errors import *
-from opensocial import oauth, simplejson
 from request import *
 
 
