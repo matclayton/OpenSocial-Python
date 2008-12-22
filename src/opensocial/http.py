@@ -19,6 +19,7 @@ __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
 import httplib
+import logging
 import sys
 import urllib2
 
@@ -43,6 +44,13 @@ def get_default_urlfetch():
     return AppEngineUrlFetch()
   return UrlFetch()
 
+def log_request(request):
+  logging.basicConfig(level=logging.DEBUG)
+  logging.debug('URL: %s %s\nHEADERS: %s\nPOST: %s' % (request.get_method(),
+                                     request.get_url(),
+                                     str(request.get_headers()),
+                                     request.get_post_body()))
+
 
 class UrlFetch(object):
   """An API which provides a simple interface for performing HTTP requests."""
@@ -58,17 +66,18 @@ class UrlFetch(object):
     Returns: An http.Response object.
     
     """
+    log_request(request)
     method = request.get_method()
     headers = request.get_headers()
-    req = urllib2.Request(request.get_url(), 
-                          data=request.get_post_body(), 
+    req = urllib2.Request(request.get_url(),
+                          data=request.get_post_body(),
                           headers=request.get_headers())
     try:
       f = urllib2.urlopen(req)
       result = f.read()
       return Response(httplib.OK, result)
     except urllib2.URLError, e:
-      return Response(e.reason.code, '')
+      return Response(e.code, e.read())
 
 
 class AppEngineUrlFetch(UrlFetch):
@@ -83,6 +92,7 @@ class AppEngineUrlFetch(UrlFetch):
     Returns: An http.Response object.
 
     """
+    log_request(request)
     method = request.get_method()
     url = request.get_url()
     body = request.get_post_body()
@@ -105,8 +115,14 @@ class Request(object):
 
   def __init__(self, url, method='GET', signed_params=None, post_body=None):
     self.post_body = post_body or None
+    """OAuth library will not create a request unless there is at least one
+    parameter. So we are going to set at least one explicitly.
+    """
+    params = signed_params or {}
+    params['opensocial_method'] = method
     self.oauth_request = oauth.OAuthRequest.from_request(method, url,
-        parameters=signed_params)
+        parameters=params)
+    assert self.oauth_request
     
   def sign_request(self, consumer, signature_method):
     """Add oauth parameters and sign the request with the given method.
@@ -123,21 +139,19 @@ class Request(object):
       'oauth_version': oauth.OAuthRequest.version,
     }
     
-    """N.B.: This is a workaround for fact that POST body is included in the
-    signing of this request.
-
-    """
-    body = self.get_post_body()
-    if body:
-      params[body] = ''
-
     self.set_parameters(params)
     self.oauth_request.sign_request(signature_method, consumer, None)
     
-    """Part II of the workaround above, remove the body from the parameters."""
-    if body:
-      del self.oauth_request.parameters[body]
-  
+  def set_parameter(self, name, value):
+    """Set a parameter for this request.
+    
+    Args:
+      name: str The parameter name.
+      value: str The parameter value.
+
+    """
+    self.oauth_request.set_parameter(name, value)
+      
   def set_parameters(self, params):
     """Set the parameters for this request.
     
@@ -145,8 +159,8 @@ class Request(object):
       params: dict A dict of parameters.
 
     """
-    for key, value in params.iteritems():
-      self.oauth_request.set_parameter(key, value)
+    for name, value in params.iteritems():
+      self.set_parameter(name, value)
   
   def get_parameter(self, key):
     """Get the value of a particular parameter.

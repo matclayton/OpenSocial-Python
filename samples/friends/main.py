@@ -29,7 +29,7 @@ from google.appengine.ext import webapp
 class Handler(webapp.RequestHandler):
 
   def get(self):
-    self.test_batch('03067092798963641994')
+    self.test_friends('03067092798963641994')
  
   def get_container(self):
     config = ContainerConfig(oauth_consumer_key='orkut.com:623061448914',
@@ -39,15 +39,6 @@ class Handler(webapp.RequestHandler):
     return ContainerContext(config)
     
   def test_friends(self, user_id):
-    container = self.get_container()
-
-    me = container.fetch_person(user_id)
-    friends = container.fetch_friends(user_id)
-
-    self.response.out.write('<h3>Test</h3>')
-    self.output(me, friends)
-
-  def test_batch(self, user_id):
     container = self.get_container()
     
     batch = RequestBatch()
@@ -64,11 +55,11 @@ class Handler(webapp.RequestHandler):
 
   def output(self, me, friends):
     self.response.out.write('%s\'s Friends: ' % me.get_display_name())
-    if friends.items == 0:
+    if not friends:
       self.response.out.write('You have no friends.')
     else:
       self.response.out.write('<ul>')
-      for person in friends.items:
+      for person in friends:
         self.response.out.write('<li>%s</li>' % person.get_display_name())
       self.response.out.write('</ul>')
 

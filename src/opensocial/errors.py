@@ -27,18 +27,22 @@ class Error(Exception):
 
 class ConfigError(Error):
   """Raised when the client has not been configured properly."""
-
+  
 
 class BadResponseError(Error):
   """Raised when the status code is not OK or data returned is invalid."""
   def __init__(self, response):
     self.response = response
-
+  
 
 class BadRequestError(Error):
   """Raised when a malformed request is detected."""
   def __init__(self, response):
     self.response = response
+    
+  def __str__(self):
+    return 'STATUS: %d\nRESPONSE: %s' % (self.response.status,
+                                         self.response.content)
 
 
 class UnauthorizedRequestError(Error):

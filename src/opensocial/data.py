@@ -30,7 +30,7 @@ def extract_fields(json):
   Returns: A JSON dict of field/value pairs.
 
   """
-  return json.get('data') or json.get('entry') or {}   
+  return json.get('entry') or json
 
 
 class Object(object):
@@ -67,12 +67,14 @@ class Person(Object):
     
     Returns: The full name of this Person.
 
-    """ 
+    """
+    display_name = self.get_field('displayName')
+    if display_name:
+      return display_name
     names = self.get_field('name')
     if names:
       return '%s %s' % (names['givenName'], names['familyName'])
-    else:
-      return ''
+    return ''
 
   @staticmethod
   def parse_json(json):
@@ -86,7 +88,7 @@ class Person(Object):
     return Person(extract_fields(json))
 
 
-class Collection(object):
+class Collection(list):
   """Contains a collection of OpenSocial objects.
   
   Handles the parsing of a JSON object and creation of the associated OpenSocial
@@ -95,10 +97,11 @@ class Collection(object):
   """
   
   def __init__(self, items, start, total):
-    self.items = items
-    self.start = start
-    self.total = total
-  
+    for v in items:
+      self.append(v)
+    self.startIndex = start
+    self.totalResults = total
+        
   @staticmethod
   def parse_json(json, cls):
     """Creates a collection from a JSON object returned by an OpenSocial
@@ -112,10 +115,11 @@ class Collection(object):
     Returns: A Collection of OpenSocial objects.
 
     """
+    
     start = json.get('startIndex')
     total = json.get('totalResults')
     items = []
-    json_list = json.get('entry')
+    json_list = json.get('entry') or json.get('list')      
     for fields in json_list:
       items.append(cls(fields))
     return Collection(items, start, total)

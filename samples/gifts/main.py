@@ -50,13 +50,18 @@ class SocialData(object):
   def __init__(self):
     config = ContainerConfig(oauth_consumer_key='orkut.com:623061448914',
         oauth_consumer_secret='uynAeXiWTisflWX99KU1D2q5',
-        server_rest_base='http://sandbox.orkut.com/social/rest/')
+        server_rpc_base='http://sandbox.orkut.com/social/rpc/')
     self.container = ContainerContext(config)
-    self.me = self.container.fetch_person(USER_ID)
-    self.friends = self.container.fetch_friends(USER_ID)
+    batch = RequestBatch()
+    batch.add_request('me', request.FetchPersonRequest(USER_ID))
+    batch.add_request('friends',
+                      request.FetchPeopleRequest(USER_ID, '@friends'))
+    batch.send(self.container)
+    self.me = batch.get('me')
+    self.friends = batch.get('friends')
   
   def get_friend(self, id):
-    for friend in self.friends.items:
+    for friend in self.friends:
       if friend.get_id() == id:
         return friend
     return None
@@ -98,7 +103,7 @@ friends. Enjoy!<br/><br/>
       html.append('<option value="%s">%s</option>' % (key, gift.get('name')))
     html.append('<option value="random">a random gift</option>')
     html.append('</select> to <select name="to">')
-    for friend in social_data.friends.items:
+    for friend in social_data.friends:
       html.append('<option value="%s">%s</option>' %
                   (friend.get_id(), friend.get_display_name()))
     html.append('</select> <input type="submit" value="Send It!"/></form>')

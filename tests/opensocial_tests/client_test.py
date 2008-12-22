@@ -35,43 +35,40 @@ class TestRestRequest(unittest.TestCase):
     rest_request = request.RestRequestInfo('@me/@friends')
     http_request = rest_request.make_http_request(TEST_CONFIG.server_rest_base)
     self.assertEquals('GET', http_request.get_method())
-    self.assertEquals('http://www.foo.com/rest/@me/@friends?',
-                      http_request.get_url())
+    self.assertEquals(
+        'http://www.foo.com/rest/@me/@friends?opensocial_method=GET',
+        http_request.get_url())
 
     
 class TestRpcRequest(unittest.TestCase):
 
-  def test_make_http_request(self):
+  def test_rpc_body(self):
     rpc_request = RpcRequestInfo('people.get',
-                                params={'userId': '101',
-                                        'groupId': '@friends'},
-                                id='foo')
-    http_request = rpc_request.make_http_request('http://www.foo.com/rpc')
-    self.assertEquals('POST', http_request.get_method())
-    self.assertEquals('http://www.foo.com/rpc?', http_request.get_url())
-    json_body = {
-      'params': {'userId': '101', 'groupId': '@friends'},
-      'method': 'people.get',
-      'id': 'foo',
-    }
-    post_body = simplejson.dumps(json_body)
-    self.assertEquals(post_body, http_request.get_post_body())
+                                 params={'userId': '101',
+                                         'groupId': '@friends'},
+                                 id='foo')
+    rpc_body = rpc_request.get_rpc_body()
+    self.assertEquals('people.get', rpc_body['method'])
+    self.assertEquals('foo', rpc_body['id'])
+    self.assertEquals('101', rpc_body['params']['userId'])
+    self.assertEquals('@friends', rpc_body['params']['groupId'])
 
 
 class TestContainerContext(unittest.TestCase):
 
   viewer_response = http.Response(httplib.OK, simplejson.dumps(
-      {'entry': test_data.VIEWER_FIELDS}))
+      test_data.VIEWER_FIELDS))
 
   friends_response = http.Response(httplib.OK, simplejson.dumps(
-      {'startIndex': 0,
-       'totalResults': len(test_data.FRIEND_COLLECTION_FIELDS),
-       'entry': test_data.FRIEND_COLLECTION_FIELDS}))
+      test_data.FRIEND_COLLECTION_FIELDS))
 
-  noauth_response = http.Response(httplib.OK, simplejson.dumps(test_data.NO_AUTH))
+  noauth_response = http.Response(httplib.OK,
+                                  simplejson.dumps(test_data.NO_AUTH))
 
-  def add_canned_response(self, request_url, http_response):
+  def add_canned_response(self, request_url, http_response, requestor_id=None):
     http_request = http.Request(request_url)
+    if requestor_id:
+      http_request.set_parameter('xoauth_requestor_id', requestor_id)
     self.urlfetch.add_response(http_request, http_response)
 
   def setUp(self):
@@ -85,10 +82,12 @@ class TestContainerContext(unittest.TestCase):
                              TestContainerContext.friends_response)
 
     self.add_canned_response('http://www.foo.com/rest/people/102/@friends',
-                             TestContainerContext.noauth_response)
+                             TestContainerContext.noauth_response,
+                             requestor_id='102')
 
     self.add_canned_response('http://www.foo.com/rest/people/103/@friends',
-                              http.Response(httplib.NOT_FOUND, 'Error'))
+                              http.Response(httplib.NOT_FOUND, 'Error'),
+                              requestor_id='103')
 
   def test_supports_rpc(self):
     self.assertEqual(False, self.container.supports_rpc())
@@ -101,10 +100,12 @@ class TestContainerContext(unittest.TestCase):
 
   def test_fetch_friends(self):
     friends = self.container.fetch_friends('@me')
-    self.assertEqual(friends.start, test_data.FRIEND_COLLECTION.start)
-    self.assertEqual(friends.total, test_data.FRIEND_COLLECTION.total)
-    for i in range(len(friends.items)):
-      person = friends.items[i]
+    self.assertEqual(friends.startIndex,
+                     test_data.FRIENDS.startIndex)
+    self.assertEqual(friends.totalResults,
+                     test_data.FRIENDS.totalResults)
+    for i in range(len(friends)):
+      person = friends[i]
       test_person = test_data.FRIENDS[i]
       self.assertEqual(person.get_id(), test_person.get_id())
       self.assertEqual(person.get_display_name(),

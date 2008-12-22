@@ -18,14 +18,14 @@
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
-import run_system_tests
-import run_unit_tests
+import module_test_runner
+import opensocial_tests.client_test
 
 
-def RunAllTests():
-  run_unit_tests.RunUnitTests()
-  run_system_tests.RunSystemTests()
-
+def RunUnitTests():
+  test_runner = module_test_runner.ModuleTestRunner()
+  test_runner.modules = [opensocial_tests.client_test]
+  test_runner.RunAllTests()
 
 if __name__ == '__main__':
-  RunAllTests()
+  RunUnitTests()

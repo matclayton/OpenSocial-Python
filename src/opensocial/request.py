@@ -21,6 +21,7 @@ __author__ = 'davidbyttow@google.com (David Byttow)'
 import md5
 import random
 import time
+import urlparse
 
 import data
 import http
@@ -49,7 +50,36 @@ class Request(object):
   def __init__(self, rest_request, rpc_request):
     self.rest_request = rest_request
     self.rpc_request = rpc_request
+    self.__requestor = None
     
+  def get_requestor(self):
+    """Get the requestor id for this request.
+    
+    Returns: The requestor's id.
+    
+    """
+    return self.__requestor
+  
+  def set_requestor(self, id):
+    """Set the requestor id for this request.
+    
+    This does not accept any keywords such as @me.
+    TODO: Refactor the id check out of here.
+    
+    Args:
+      id: str The requestor's id.
+      
+    """
+    if id and id[0] is not '@':
+      self.__requestor = id
+    
+  def get_query_params(self):
+    """Returns the query params string for this request."""
+    query_params = {}
+    if self.get_requestor():
+      query_params['xoauth_requestor_id'] = self.get_requestor()
+    return query_params
+  
   def make_rest_request(self, url_base):
     """Creates a RESTful HTTP request.
     
@@ -57,16 +87,11 @@ class Request(object):
       url_base: str The base REST URL.
 
     """
-    return self.rest_request.make_http_request(url_base)
-  
-  def make_rpc_request(self, url_base):
-    """Creates a RPC-based HTTP request.
-    
-    Args:
-      url_base: str The base RPC URL.
+    return self.rest_request.make_http_request(url_base,
+                                               self.get_query_params())
 
-    """
-    return self.rpc_request.make_http_request(url_base)
+  def get_rpc_body(self):
+    return self.rpc_request.get_rpc_body()
 
 
 class FetchPeopleRequest(Request):    
@@ -78,6 +103,7 @@ class FetchPeopleRequest(Request):
     rest_request = RestRequestInfo('/'.join(('people', user_id, group_id)))
     rpc_request = RpcRequestInfo('people.get', params=params)
     super(FetchPeopleRequest, self).__init__(rest_request, rpc_request)
+    self.set_requestor(user_id)
     
   def process_json(self, json):
     """Construct the appropriate OpenSocial object from a JSON dict.
@@ -108,7 +134,7 @@ class FetchPersonRequest(FetchPeopleRequest):
 
     """
     return data.Person.parse_json(json)
-  
+
 
 class RestRequestInfo(object):
   """Represents a pending REST request."""
@@ -118,7 +144,7 @@ class RestRequestInfo(object):
     self.path = path
     self.fields = fields
 
-  def make_http_request(self, url_base):
+  def make_http_request(self, url_base, query_params=None):
     """Generates a http.Request object for the UrlFetch interface.
     
     Args:
@@ -127,8 +153,11 @@ class RestRequestInfo(object):
     Returns: The http.Request object.
 
     """
+    # Ensure that there is a path separator.
+    if url_base[-1] is not '/' and self.path[0] is not '/':
+      url_base = url_base + '/'
     url = url_base + self.path
-    return http.Request(url, method=self.method)
+    return http.Request(url, method=self.method, signed_params=query_params)
 
 
 class RpcRequestInfo(object):
@@ -137,26 +166,20 @@ class RpcRequestInfo(object):
   def __init__(self, method, params, id=None):
     self.method = method
     self.params = params
-    self.id = id
-  
-  def make_http_request(self, url_base):
-    """Generates a http.Request object for the UrlFetch interface.
+    self.id = id or generate_uuid(method)
     
-    Args:
-      url_base: str The base RPC URL.
+  def get_rpc_body(self):
+    """Creates the JSON dict structure for thie RPC request.
     
-    Returns: The http.Request object.
+    Returns: dict The JSON body for this RPC.
 
     """
-    if self.id is None:
-      self.id = generate_uuid(url_base) 
     rpc_body = {
-      'method': self.method,
       'params': self.params,
+      'method': self.method,
       'id': self.id,
     }
-    json_body = rpc_body
-    return http.Request(url_base, method='POST', post_body=json_body)
+    return rpc_body
 
 
 class RequestBatch(object):

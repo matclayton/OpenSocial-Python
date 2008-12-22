@@ -175,7 +175,7 @@ class OAuthRequest(object):
         # combine multiple parameter sources
         if parameters is None:
             parameters = {}
-            
+
         # headers
         if headers and 'Authorization' in headers:
             auth_header = headers['Authorization']
@@ -198,7 +198,7 @@ class OAuthRequest(object):
         url_params = OAuthRequest._split_url_string(param_str)
         parameters.update(url_params)
 
-        if parameters is not None:
+        if parameters:
             return OAuthRequest(http_method, http_url, parameters)
 
         return None
@@ -521,4 +521,3 @@ class OAuthSignatureMethod_PLAINTEXT(OAuthSignatureMethod):
 
     def build_signature(self, oauth_request, consumer, token):
         return self.build_signature_base_string(oauth_request, consumer, token)
-
