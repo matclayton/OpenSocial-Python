@@ -4,8 +4,8 @@
     <Require feature="opensocial-0.8"/>
     <Require feature="dynamic-height"/>
   </ModulePrefs>
-  <!-- ALm6fM0XFYLrkKzEP8MbSJq925M99lsyeiwLcueGAM6EHGPKvompZ0c2BzzgpmS_qdI2acEo60lhcvFUsHXiDO7riN1g-gi6UMa2_syPmcf5Lz126x8ONOiJeFIzlgfjjArp9xjuSl-FXx7UL98V9hdUGUoMueLjTMlAXntw6iaEcAIcUz-vVjc6lGZnvEllKdnfcpXWckLA -->
   <Content type="html">
+    <!-- ALm6fM2rM4osJiTDE-6ZX9idZsSKRUHRiuSH5pY-TTPnoqA7w5iMcPT3SuCudQKQnGX08ad0YTRyT0wCI1QP2yylOZlbOt_4mRsMESjd4eefKHv6PDusSwsQ-vjsCBoYJlsPqwEtEbY0bNDFgHd3B4BU8dffUTjEcrn5OO_hQJgtUY1CK8_b03ALQZ92Im4PEckoTTQKsM_e -->
     <script type="javascript">
       // Sends a signed makeRequest to a remote server to load the iframe
       function sendSignedRequest(server) {
