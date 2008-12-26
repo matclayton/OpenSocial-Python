@@ -5,7 +5,8 @@
     <Require feature="dynamic-height"/>
   </ModulePrefs>
   <Content type="html">
-    <!-- ALm6fM2rM4osJiTDE-6ZX9idZsSKRUHRiuSH5pY-TTPnoqA7w5iMcPT3SuCudQKQnGX08ad0YTRyT0wCI1QP2yylOZlbOt_4mRsMESjd4eefKHv6PDusSwsQ-vjsCBoYJlsPqwEtEbY0bNDFgHd3B4BU8dffUTjEcrn5OO_hQJgtUY1CK8_b03ALQZ92Im4PEckoTTQKsM_e -->
+    <![CDATA[
+    <!-- ALm6fM0Fi-m3S97aF4Wbq1oVf_sk7qRq9l482c8FdAglGs-HJSDH3JlVh6GlA62xaQefjXwnvkUZG7zlICAbTBx_5jka7ODjuxGwtkZn0hIYY3qhvTbV1_vE8HzUkfukX6NCxXlrOhkveNmAcfaS3UuMl91whquZ7eiPFThsPdPAL-gm2t27pWQEWYNh9p3RoqpHe5PbaeP2 -->
     <script type="javascript">
       // Sends a signed makeRequest to a remote server to load the iframe
       function sendSignedRequest(server) {
@@ -35,6 +36,7 @@
       gadgets.util.registerOnLoadHandler(init);
     </script>
     <div id="frame"></div>
+    ]]>
   </Content>
 </Module>
 
