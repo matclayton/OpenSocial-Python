@@ -69,6 +69,7 @@ class TestContainerContext(unittest.TestCase):
     http_request = http.Request(request_url)
     if requestor_id:
       http_request.set_parameter('xoauth_requestor_id', requestor_id)
+    http_request.set_parameter('opensocial_method', 'GET')
     self.urlfetch.add_response(http_request, http_response)
 
   def setUp(self):

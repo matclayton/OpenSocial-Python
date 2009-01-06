@@ -50,7 +50,7 @@ class Request(object):
   def __init__(self, rest_request, rpc_request, requestor=None):
     self.rest_request = rest_request
     self.rpc_request = rpc_request
-    self.__requestor = requestor
+    self.set_requestor(requestor)
     
   def get_requestor(self):
     """Get the requestor id for this request.
@@ -64,7 +64,7 @@ class Request(object):
     """Set the requestor id for this request.
     
     This does not accept any keywords such as @me.
-    TODO: Refactor the id check out of here.
+    TODO: Refactor the id check out of here, it feels wrong.
     
     Args:
       id: str The requestor's id.
@@ -72,6 +72,8 @@ class Request(object):
     """
     if id and id[0] is not '@':
       self.__requestor = id
+    else:
+      self.__requestor = None
     
   def get_query_params(self):
     """Returns the query params string for this request."""
