@@ -33,6 +33,7 @@ def extract_fields(json):
   return json.get('entry') or json
 
 
+# TODO: Convert to dict (but leave get_field for deprecation).
 class Object(object):
   """Generic container for opensocial.* objects."""
 
@@ -41,6 +42,8 @@ class Object(object):
 
   def get_field(self, name):
     """Retrieves a specific field value for this Object.
+
+    N.B.: Deprecated in favor of type dict methods.
     
     Returns: The field value.
 
@@ -86,6 +89,16 @@ class Person(Object):
 
     """
     return Person(extract_fields(json))
+
+
+class AppData(Object):
+
+  def __init__(self, data):
+    self._data = data
+
+  @staticmethod
+  def parse_json(json):
+    return AppData(extract_fields(json))
 
 
 class Collection(list):

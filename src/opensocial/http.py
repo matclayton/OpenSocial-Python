@@ -31,6 +31,9 @@ except:
   pass
 
 
+logging.basicConfig(level=logging.DEBUG)
+
+
 def get_default_urlfetch():
   """Creates the default UrlFetch interface.
   
@@ -45,11 +48,16 @@ def get_default_urlfetch():
   return UrlFetch()
 
 def log_request(request):
-  logging.basicConfig(level=logging.DEBUG)
-  logging.debug('URL: %s %s\nHEADERS: %s\nPOST: %s' % (request.get_method(),
-                                     request.get_url(),
-                                     str(request.get_headers()),
-                                     request.get_post_body()))
+  logging.debug('URL: %s %s\nHEADERS: %s\nPOST: %s' %
+                (request.get_method(),
+                 request.get_url(),
+                 str(request.get_headers()),
+                 request.get_post_body()))
+
+
+def log_response(response):
+  logging.debug('Status: %d\nContent: %s' % (response.status,
+                                             response.content))
 
 
 class UrlFetch(object):
@@ -75,10 +83,12 @@ class UrlFetch(object):
     try:
       f = urllib2.urlopen(req)
       result = f.read()
-      return Response(httplib.OK, result)
+      response = Response(httplib.OK, result)
     except urllib2.URLError, e:
-      return Response(e.code, e.read())
+      response = Response(e.code, e.read())
 
+    log_response(response)
+    return response
 
 class AppEngineUrlFetch(UrlFetch):
   """Implementation of UrlFetch using AppEngine's URLFetch API."""

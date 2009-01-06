@@ -47,10 +47,10 @@ def generate_uuid(*args):
 class Request(object):
   """Represents an OpenSocial request that can be processed via RPC or REST."""
   
-  def __init__(self, rest_request, rpc_request):
+  def __init__(self, rest_request, rpc_request, requestor=None):
     self.rest_request = rest_request
     self.rpc_request = rpc_request
-    self.__requestor = None
+    self.__requestor = requestor
     
   def get_requestor(self):
     """Get the requestor id for this request.
@@ -97,13 +97,14 @@ class Request(object):
 class FetchPeopleRequest(Request):    
   """A request for handling fetching a collection of people."""
   
-  def __init__(self, user_id, group_id, params={}, id=None):
+  def __init__(self, user_id, group_id, params={}):
     params.update({'userId': user_id,
                    'groupId': group_id})
     rest_request = RestRequestInfo('/'.join(('people', user_id, group_id)))
     rpc_request = RpcRequestInfo('people.get', params=params)
-    super(FetchPeopleRequest, self).__init__(rest_request, rpc_request)
-    self.set_requestor(user_id)
+    super(FetchPeopleRequest, self).__init__(rest_request,
+                                             rpc_request,
+                                             user_id)
     
   def process_json(self, json):
     """Construct the appropriate OpenSocial object from a JSON dict.
@@ -120,9 +121,8 @@ class FetchPeopleRequest(Request):
 class FetchPersonRequest(FetchPeopleRequest):
   """A request for handling fetching a single person by id."""
 
-  def __init__(self, user_id, params={}, id=None):
-    super(FetchPersonRequest, self).__init__(user_id, '@self', 
-                                             params=params, id=id)
+  def __init__(self, user_id, params={}):
+    super(FetchPersonRequest, self).__init__(user_id, '@self', params=params)
 
   def process_json(self, json):
     """Construct the appropriate OpenSocial object from a JSON dict.
@@ -134,6 +134,34 @@ class FetchPersonRequest(FetchPeopleRequest):
 
     """
     return data.Person.parse_json(json)
+
+
+class FetchAppDataRequest(Request):
+  """A request for handling fetching app data."""
+
+  def __init__(self, user_id, group_id, app_id='@app', keys=None, params={}):
+    # TODO: Handle REST fields.
+    params.update({'userId': user_id,
+                   'groupId': group_id,
+                   'appId': app_id,
+                   'keys': keys})
+    rest_request = RestRequestInfo('/'.join(
+        ('appdata', user_id, group_id, app_id)))
+    rpc_request = RpcRequestInfo('appdata.get', params=params)
+    super(FetchAppDataRequest, self).__init__(rest_request,
+                                              rpc_request,
+                                              user_id)
+
+  def process_json(self, json):
+    """Construct the appropriate OpenSocial object from a JSON dict.
+    
+    Args:
+      json: dict The JSON structure.
+      
+    Returns: An AppData object.
+
+    """
+    return data.AppData.parse_json(json)
 
 
 class RestRequestInfo(object):
@@ -219,4 +247,3 @@ class RequestBatch(object):
 
   def _set_data(self, key, data):
     self.data[key] = data
-

@@ -19,6 +19,7 @@ __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
 import module_test_runner
+import opensocial_tests.igoogle_test
 import opensocial_tests.orkut_test
 import opensocial_tests.myspace_test
 

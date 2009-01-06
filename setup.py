@@ -28,6 +28,6 @@ setup(
     author_email='davidbyttow@google.com',
     license='Apache 2.0',
     url='http://code.google.com/p/opensocial-python-client',
-    packages=['opensocial', 'opensocial.oauth'],
+    packages=['opensocial', 'opensocial.oauth', 'opensocial.simplejson'],
     package_dir={'opensocial': 'src/opensocial'}
 )
