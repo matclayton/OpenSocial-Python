@@ -38,6 +38,10 @@ class TestMySpace(unittest.TestCase):
     self.assertEquals('myspace.com:' + self.user_id, me.get_id())
     self.assertEquals('API', me.get_display_name())
     
+  def test_fetch_person_fields(self):
+    me = self.container.fetch_person(self.user_id, ['gender'])
+    self.assertEquals('Male', me.get_field('gender'))
+    
   def test_fetch_friends(self):
     friends = self.container.fetch_friends(self.user_id)
     self.assertEquals(4, len(friends))

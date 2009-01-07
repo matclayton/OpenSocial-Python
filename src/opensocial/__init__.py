@@ -80,10 +80,15 @@ class ContainerContext(object):
     self.url_fetch = url_fetch or http.get_default_urlfetch()
     self.oauth_signature_method = oauth.OAuthSignatureMethod_HMAC_SHA1() 
     self.oauth_consumer = None
+    self.allow_rpc = True
     if self.config.oauth_consumer_key and self.config.oauth_consumer_secret:
       self.oauth_consumer = oauth.OAuthConsumer(
           self.config.oauth_consumer_key,
           self.config.oauth_consumer_secret)
+      
+  def set_allow_rpc(self, allowed):
+    """Sets if RPC requests are allowed if they are supported."""
+    self.allow_rpc = allowed
     
   def supports_rpc(self):
     """Tells whether or not the container was setup for RPC protocol.
@@ -94,31 +99,33 @@ class ContainerContext(object):
     re-enable this.
 
     """
-    return self.config.server_rpc_base is not None
+    return self.allow_rpc and self.config.server_rpc_base is not None
   
-  def fetch_person(self, user_id='@me'):
+  def fetch_person(self, user_id='@me', fields=None):
     """Fetches a person by user id.
     
     Args:
       user_id: str The person's container-specific id.
+      fields: list (optional) List of fields to retrieve.
       
     Returns: A Person object representing the specified user id.
 
     """
-    request = FetchPersonRequest(user_id)
+    request = FetchPersonRequest(user_id, fields=fields)
     return self.send_request(request)
 
-  def fetch_friends(self, user_id='@me'):
+  def fetch_friends(self, user_id='@me', fields=None):
     """Fetches the friends of a given user by id.
     
     Args:
       user_id: str The person's container-specific id for which to retrieve
       friends.
+      fields: list (optional) List of fields to retrieve.
       
     Returns: A Collection of Person objects.
 
     """
-    request = FetchPeopleRequest(user_id, '@friends')
+    request = FetchPeopleRequest(user_id, '@friends', fields=fields)
     return self.send_request(request)
 
   def send_request(self, request, use_rest=False):

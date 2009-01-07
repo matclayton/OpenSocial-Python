@@ -99,11 +99,16 @@ class Request(object):
 class FetchPeopleRequest(Request):    
   """A request for handling fetching a collection of people."""
   
-  def __init__(self, user_id, group_id, params={}):
-    params.update({'userId': user_id,
-                   'groupId': group_id})
-    rest_request = RestRequestInfo('/'.join(('people', user_id, group_id)))
-    rpc_request = RpcRequestInfo('people.get', params=params)
+  def __init__(self, user_id, group_id, fields=None, params=None):
+    params = params or {}
+    if fields:
+      params['fields'] = ','.join(fields)
+    rest_request = RestRequestInfo('/'.join(('people', user_id, group_id)),
+                                   params=params)
+    rpc_params = params.copy()
+    rpc_params.update({'userId': user_id,
+                       'groupId': group_id})
+    rpc_request = RpcRequestInfo('people.get', params=rpc_params)
     super(FetchPeopleRequest, self).__init__(rest_request,
                                              rpc_request,
                                              user_id)
@@ -123,8 +128,11 @@ class FetchPeopleRequest(Request):
 class FetchPersonRequest(FetchPeopleRequest):
   """A request for handling fetching a single person by id."""
 
-  def __init__(self, user_id, params={}):
-    super(FetchPersonRequest, self).__init__(user_id, '@self', params=params)
+  def __init__(self, user_id, fields=None, params={}):
+    super(FetchPersonRequest, self).__init__(user_id,
+                                             '@self',
+                                             fields=fields,
+                                             params=params)
 
   def process_json(self, json):
     """Construct the appropriate OpenSocial object from a JSON dict.
@@ -141,14 +149,18 @@ class FetchPersonRequest(FetchPeopleRequest):
 class FetchAppDataRequest(Request):
   """A request for handling fetching app data."""
 
-  def __init__(self, user_id, group_id, app_id='@app', keys=None, params={}):
+  def __init__(self, user_id, group_id, app_id='@app', keys=None, params=None):
+    params = params or {}
+    if fields:
+      params['fields'] = ','.join(fields)
+    rest_path = '/'.join(('appdata', user_id, group_id, app_id))
+    rest_request = RestRequestInfo(rest_path, params=params)
+    
     # TODO: Handle REST fields.
     params.update({'userId': user_id,
                    'groupId': group_id,
                    'appId': app_id,
                    'keys': keys})
-    rest_request = RestRequestInfo('/'.join(
-        ('appdata', user_id, group_id, app_id)))
     rpc_request = RpcRequestInfo('appdata.get', params=params)
     super(FetchAppDataRequest, self).__init__(rest_request,
                                               rpc_request,
@@ -169,10 +181,10 @@ class FetchAppDataRequest(Request):
 class RestRequestInfo(object):
   """Represents a pending REST request."""
 
-  def __init__(self, path, method='GET', fields=None):
+  def __init__(self, path, method='GET', params=None):
     self.method = method
     self.path = path
-    self.fields = fields
+    self.params = params or {}
 
   def make_http_request(self, url_base, query_params=None):
     """Generates a http.Request object for the UrlFetch interface.
@@ -187,7 +199,8 @@ class RestRequestInfo(object):
     if url_base[-1] is not '/' and self.path[0] is not '/':
       url_base = url_base + '/'
     url = url_base + self.path
-    return http.Request(url, method=self.method, signed_params=query_params)
+    self.params.update(query_params)
+    return http.Request(url, method=self.method, signed_params=self.params)
 
 
 class RpcRequestInfo(object):

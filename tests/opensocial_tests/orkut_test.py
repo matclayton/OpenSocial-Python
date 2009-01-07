@@ -24,6 +24,7 @@ import urllib2
 import opensocial
 
 from opensocial import oauth
+from opensocial import request
 
 
 class TestOrkut(unittest.TestCase):
@@ -32,7 +33,8 @@ class TestOrkut(unittest.TestCase):
     self.config = opensocial.ContainerConfig(
         oauth_consumer_key='orkut.com:623061448914',
         oauth_consumer_secret='uynAeXiWTisflWX99KU1D2q5',
-        server_rpc_base='http://sandbox.orkut.com/social/rpc')
+        server_rpc_base='http://sandbox.orkut.com/social/rpc',
+        server_rest_base='http://sandbox.orkut.com/social/rest')
     self.container = opensocial.ContainerContext(self.config)
     self.user_id = '03067092798963641994'
 
@@ -45,14 +47,40 @@ class TestOrkut(unittest.TestCase):
     self.assertEquals(6, friends.totalResults)
     self.assertEquals('13314698784882897227', friends[0].get_id())
     self.assertEquals('04285289033838943214', friends[1].get_id())
-  
-  def test_fetch_person(self):
-    me = self.container.fetch_person(self.user_id)
-    self.validate_user(me)
+    
+  def do_fetch_person(self, use_rpc, fields=None):
+    self.container.set_allow_rpc(use_rpc)
+    person = self.container.fetch_person(self.user_id, fields)
+    return person
 
-  def test_fetch_friends(self):
-    friends = self.container.fetch_friends(self.user_id)
+  def do_fetch_friends(self, use_rpc, fields=None):
+    self.container.set_allow_rpc(use_rpc)
+    friends = self.container.fetch_friends(self.user_id, fields)
+    return friends
+  
+  def test_fetch_person_rpc(self):
+    person = self.do_fetch_person(True)
+    self.validate_user(person)
+
+  def test_fetch_person_rest(self):
+    person = self.do_fetch_person(False)
+    self.validate_user(person)
+    
+  def test_fetch_friends_rpc(self):
+    friends = self.do_fetch_friends(True)
     self.validate_friends(friends)
+
+  def test_fetch_friends_rest(self):
+    friends = self.do_fetch_friends(False)
+    self.validate_friends(friends)
+    
+  def test_fetch_person_fields_rpc(self):
+    person = self.do_fetch_person(True, ['gender'])
+    self.assertEquals('male', person.get_field('gender'))
+    
+  def test_fetch_person_fields_rest(self):
+    person = self.do_fetch_person(False, ['gender'])
+    self.assertEquals('male', person.get_field('gender'))
 
   def test_batch(self):
     batch = opensocial.request.RequestBatch()
