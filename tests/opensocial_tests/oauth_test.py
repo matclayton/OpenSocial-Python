@@ -18,19 +18,26 @@
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
-import module_test_runner
-import opensocial_tests.orkut_test
-import opensocial_tests.myspace_test
-import opensocial_tests.oauth_test
+import logging
+import unittest
+import urllib2
+
+import opensocial
+
+from opensocial import oauth
 
 
-def RunSystemTests():
-  test_runner = module_test_runner.ModuleTestRunner()
-  test_runner.modules = [opensocial_tests.orkut_test,
-                         opensocial_tests.myspace_test,
-			 opensocial_tests.oauth_test]
-  test_runner.RunAllTests()
+class TestOAuth(unittest.TestCase):
+  
+  def setUp(self):
+    self.config = opensocial.ContainerConfig(
+        oauth_consumer_key='oauth.org:12345689',
+        oauth_consumer_secret='not_a_secret',
+        server_rpc_base='http://oauthbox.appspot.com/rpc')
+    self.container = opensocial.ContainerContext(self.config)
+    self.user_id = '101'
 
+  def test_fetch(self):
+    data = self.container.fetch_person(self.user_id)
+    self.assertEquals(data.get_field('verified'), 'True')
 
-if __name__ == '__main__':
-  RunSystemTests()
