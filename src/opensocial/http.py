@@ -79,7 +79,7 @@ class UrlFetch(object):
     headers = request.get_headers()
     req = urllib2.Request(request.get_url(),
                           data=request.get_post_body(),
-                          headers=request.get_headers())
+                          headers=headers)
     try:
       f = urllib2.urlopen(req)
       result = f.read()
@@ -113,6 +113,7 @@ class AppEngineUrlFetch(UrlFetch):
         payload=body,
         headers=headers)
     response = Response(result.status_code, result.content)
+    log_response(response)
     return response
 
 
@@ -134,6 +135,14 @@ class Request(object):
         parameters=params)
     assert self.oauth_request
     
+  def add_security_token(self, security_token, parameter_name="st"):
+    self.oauth_request.set_parameter(parameter_name, security_token)
+    self.security_token_parameter = parameter_name
+    
+  def get_security_token(self):
+    if hasattr(self, "security_token_parameter"):
+      return self.oauth_request.get_parameter(self.security_token_parameter)
+    
   def sign_request(self, consumer, signature_method):
     """Add oauth parameters and sign the request with the given method.
     
@@ -148,6 +157,9 @@ class Request(object):
       'oauth_nonce': oauth.generate_nonce(),
       'oauth_version': oauth.OAuthRequest.version,
     }
+    
+    if self.get_security_token():
+      self.set_parameter("xoauth_requestor_id", None)
     
     self.set_parameters(params)
     self.oauth_request.sign_request(signature_method, consumer, None)

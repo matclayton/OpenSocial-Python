@@ -35,7 +35,9 @@ class ContainerConfig(object):
   """Setup parameters for connecting to a container."""
   
   def __init__(self, oauth_consumer_key=None, oauth_consumer_secret=None,
-               server_rpc_base=None, server_rest_base=None):
+               server_rpc_base=None, server_rest_base=None, 
+               security_token=None,
+               security_token_param=None):
     """Constructor for ContainerConfig.
     
     If no oauth parameters are present, then oauth will not be used to sign
@@ -50,6 +52,8 @@ class ContainerConfig(object):
     self.oauth_consumer_secret = oauth_consumer_secret
     self.server_rpc_base = server_rpc_base
     self.server_rest_base = server_rest_base
+    self.security_token = security_token
+    self.security_token_param = security_token_param
     if not server_rpc_base and not server_rest_base:
       raise ConfigError("Neither 'server_rpc_base' nor 'server_rest_base' set")
 
@@ -208,9 +212,14 @@ class ContainerContext(object):
       batch._set_data(key, request.process_json(json))
       
   def _send_http_request(self, http_request):
+    if self.config.security_token:
+      http_request.add_security_token(self.config.security_token,
+                                      self.config.security_token_param)
+
     if self.oauth_consumer and self.oauth_signature_method:
       http_request.sign_request(self.oauth_consumer,
                                 self.oauth_signature_method)
+      
     http_response = self.url_fetch.fetch(http_request)
     return http_response
       
