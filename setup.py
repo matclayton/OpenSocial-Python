@@ -22,7 +22,7 @@ from distutils.core import setup
 
 setup(
     name='opensocial.py',
-    version='0.1.0',
+    version='DEVELOPMENT',
     description='Python client library for OpenSocial data APIs',
     author='David Byttow',
     author_email='davidbyttow@google.com',

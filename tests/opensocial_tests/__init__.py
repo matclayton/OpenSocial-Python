@@ -1,5 +1,5 @@
 import sys
 import logging
-sys.path.append(sys.path[0] + '/../src')
+sys.path.insert(0, sys.path[0] + '/../src')
 
 logging.basicConfig(level=logging.INFO)

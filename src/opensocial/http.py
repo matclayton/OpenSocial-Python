@@ -23,6 +23,7 @@ import logging
 import sys
 import urllib2
 import hashlib 
+from base64 import b64encode
 
 import oauth
 import simplejson
@@ -170,7 +171,7 @@ class Request(object):
     else:
       # Otherwise, use the oauth_body_hash extension to sign the request body.
       if self.post_body:
-        body_hash = hashlib.sha1(self.get_post_body()).hexdigest()
+        body_hash = b64encode(hashlib.sha1(self.get_post_body()).digest())
         params['oauth_body_hash'] = body_hash
       
     if self.get_security_token():

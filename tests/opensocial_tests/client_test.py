@@ -21,6 +21,7 @@ import urllib
 import httplib
 import hashlib
 import unittest
+from base64 import b64encode
 
 from opensocial import *
 from opensocial import mock_http, simplejson, test_data
@@ -38,7 +39,8 @@ class TestHttp(unittest.TestCase):
 
   def test_body_hash(self):
     post_body = "I am a post body"
-    post_body_hash = hashlib.sha1(simplejson.dumps(post_body)).hexdigest()
+    post_body_json = simplejson.dumps(post_body)
+    post_body_hash = b64encode(hashlib.sha1(post_body_json).digest())
     post_body_param = simplejson.dumps(post_body)
     
     request = http.Request("http://example.com", "POST", post_body=post_body)
