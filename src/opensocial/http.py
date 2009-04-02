@@ -22,6 +22,7 @@ import httplib
 import logging
 import sys
 import urllib2
+import hashlib 
 
 import oauth
 import simplejson
@@ -129,6 +130,7 @@ class Request(object):
     """OAuth library will not create a request unless there is at least one
     parameter. So we are going to set at least one explicitly.
     """
+    self.use_body_as_signing_parameter = False
     params = signed_params or {}
     params['opensocial_method'] = method
     self.oauth_request = oauth.OAuthRequest.from_request(method, url,
@@ -142,7 +144,10 @@ class Request(object):
   def get_security_token(self):
     if hasattr(self, "security_token_parameter"):
       return self.oauth_request.get_parameter(self.security_token_parameter)
-    
+      
+  def set_body_as_signing_parameter(self, use_body):
+    self.use_body_as_signing_parameter = use_body
+        
   def sign_request(self, consumer, signature_method):
     """Add oauth parameters and sign the request with the given method.
     
@@ -157,7 +162,17 @@ class Request(object):
       'oauth_nonce': oauth.generate_nonce(),
       'oauth_version': oauth.OAuthRequest.version,
     }
-    
+          
+    # PHP OAuth library contains a bug which interferes with signing.  Since
+    # some containers use this library, we will implement a workaround here.
+    if self.use_body_as_signing_parameter:
+      params[self.get_post_body()] = ""
+    else:
+      # Otherwise, use the oauth_body_hash extension to sign the request body.
+      if self.post_body:
+        body_hash = hashlib.sha1(self.get_post_body()).hexdigest()
+        params['oauth_body_hash'] = body_hash
+      
     if self.get_security_token():
       self.set_parameter("xoauth_requestor_id", None)
     
@@ -193,7 +208,7 @@ class Request(object):
     Returns: The parameter value.
 
     """
-    return self.oauth_request.get_parameter(keys)
+    return self.oauth_request.get_parameter(key)
   
   def get_method(self):
     """Returns the HTTP normalized method of this request.

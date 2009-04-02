@@ -21,14 +21,18 @@ __author__ = 'davidbyttow@google.com (David Byttow)'
 import module_test_runner
 import opensocial_tests.orkut_test
 import opensocial_tests.myspace_test
+import opensocial_tests.partuza_test
 import opensocial_tests.oauth_test
 
 
 def RunSystemTests():
   test_runner = module_test_runner.ModuleTestRunner()
-  test_runner.modules = [opensocial_tests.orkut_test,
-                         opensocial_tests.myspace_test,
-			 opensocial_tests.oauth_test]
+  test_runner.modules = [
+       opensocial_tests.orkut_test,
+       opensocial_tests.myspace_test,
+       opensocial_tests.partuza_test,                  
+			 opensocial_tests.oauth_test
+	]
   test_runner.RunAllTests()
 
 

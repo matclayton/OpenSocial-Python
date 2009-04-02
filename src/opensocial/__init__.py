@@ -37,7 +37,8 @@ class ContainerConfig(object):
   def __init__(self, oauth_consumer_key=None, oauth_consumer_secret=None,
                server_rpc_base=None, server_rest_base=None, 
                security_token=None,
-               security_token_param=None):
+               security_token_param=None,
+               sign_with_body=False):
     """Constructor for ContainerConfig.
     
     If no oauth parameters are present, then oauth will not be used to sign
@@ -54,6 +55,7 @@ class ContainerConfig(object):
     self.server_rest_base = server_rest_base
     self.security_token = security_token
     self.security_token_param = security_token_param
+    self.sign_with_body = sign_with_body
     if not server_rpc_base and not server_rest_base:
       raise ConfigError("Neither 'server_rpc_base' nor 'server_rest_base' set")
 
@@ -217,6 +219,7 @@ class ContainerContext(object):
                                       self.config.security_token_param)
 
     if self.oauth_consumer and self.oauth_signature_method:
+      http_request.set_body_as_signing_parameter(self.config.sign_with_body)
       http_request.sign_request(self.oauth_consumer,
                                 self.oauth_signature_method)
       

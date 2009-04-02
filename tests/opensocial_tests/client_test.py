@@ -17,8 +17,9 @@
 
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
-
+import urllib
 import httplib
+import hashlib
 import unittest
 
 from opensocial import *
@@ -26,9 +27,53 @@ from opensocial import mock_http, simplejson, test_data
 
 
 TEST_CONFIG = ContainerConfig(
-    server_rest_base='http://www.foo.com/rest/')
+    server_rest_base='http://www.foo.com/rest/',
+)
 
+class TestHttp(unittest.TestCase):
+  
+  def setUp(self):
+    self.signature_method = oauth.OAuthSignatureMethod_HMAC_SHA1()
+    self.consumer = oauth.OAuthConsumer("consumer_key", "consumer_secret")
 
+  def test_body_hash(self):
+    post_body = "I am a post body"
+    post_body_hash = hashlib.sha1(simplejson.dumps(post_body)).hexdigest()
+    post_body_param = simplejson.dumps(post_body)
+    
+    request = http.Request("http://example.com", "POST", post_body=post_body)
+    request.set_body_as_signing_parameter(False)
+    request.sign_request(self.consumer, self.signature_method)
+    
+    self.assertEquals(post_body_hash, request.get_parameter('oauth_body_hash'))
+    headers = request.get_headers()
+    self.assertEquals("application/json", headers['Content-Type'])
+    
+    try:
+      request.get_parameter(post_body_param)
+    except oauth.OAuthError:
+      return
+    self.fail()
+    
+  def test_body_as_signing_param(self):
+    post_body = "I am a post body"
+    post_body_param = simplejson.dumps(post_body)
+    post_body_param_quoted = urllib.quote(post_body_param)
+    
+    request = http.Request("http://example.com", "POST", post_body=post_body)
+    request.set_body_as_signing_parameter(True)
+    request.sign_request(self.consumer, self.signature_method)
+    
+    param_location = request.get_url().find(post_body_param_quoted)
+    self.assertTrue(param_location > -1)
+    self.assertEquals("", request.get_parameter(post_body_param))
+    
+    try:
+      request.get_parameter('oauth_body_hash')
+    except oauth.OAuthError:
+      return
+    self.fail()
+    
 class TestRestRequest(unittest.TestCase):
 
   def test_http_request(self):

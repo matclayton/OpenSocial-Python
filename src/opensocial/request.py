@@ -18,7 +18,7 @@
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
-import md5
+import hashlib
 import random
 import time
 import urlparse
@@ -41,7 +41,7 @@ def generate_uuid(*args):
   r = long(random.random() * 1000000000000000L)
   a = random.random() * 1000000000000000L
   data = '%s %s %s %s' % (str(t), str(r), str(a), str(args))
-  return md5.md5(data).hexdigest()
+  return hashlib.md5(data).hexdigest()
 
 
 class Request(object):
