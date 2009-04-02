@@ -199,7 +199,8 @@ class RestRequestInfo(object):
     if url_base[-1] is not '/' and self.path[0] is not '/':
       url_base = url_base + '/'
     url = url_base + self.path
-    self.params.update(query_params)
+    if query_params:
+      self.params.update(query_params)
     return http.Request(url, method=self.method, signed_params=self.params)
 
 
