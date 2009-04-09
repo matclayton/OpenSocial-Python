@@ -59,7 +59,7 @@ def log_request(request):
 
 def log_response(response):
   logging.debug('Status: %d\nContent: %s' % (response.status,
-                                             response.content))
+                                             response.content.decode('utf-8')))
 
 
 class UrlFetch(object):
