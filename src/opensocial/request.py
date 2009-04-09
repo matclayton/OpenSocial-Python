@@ -241,6 +241,8 @@ class RequestBatch(object):
       request: obj The request object.
 
     """
+    if key:
+      request.rpc_request.id = key
     self.requests[key] = request
 
   def get(self, key):
