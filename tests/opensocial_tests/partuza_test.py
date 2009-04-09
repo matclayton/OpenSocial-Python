@@ -34,8 +34,7 @@ class TestPartuza(unittest.TestCase):
         oauth_consumer_key='e2c2d2dd-e6c4-c4df-b2c4-d6efd2dcffd1',
         oauth_consumer_secret='eb214eedcda39f3440c43b623806912f',
         server_rpc_base='http://modules.partuza.nl/social/rpc',
-        server_rest_base='http://modules.partuza.nl/social/rest',
-        sign_with_body=True)
+        server_rest_base='http://modules.partuza.nl/social/rest')
     self.container = opensocial.ContainerContext(self.config)
     self.user_id = '1311'
 
