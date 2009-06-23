@@ -44,10 +44,8 @@ class TestMySpace(unittest.TestCase):
     
   def test_fetch_friends(self):
     friends = self.container.fetch_friends(self.user_id)
-    self.assertEquals(4, len(friends))
+    self.assertEquals(5, len(friends))
     self.assertEquals(1, friends.startIndex)
-    self.assertEquals(4, friends.totalResults)
+    self.assertEquals(5, friends.totalResults)
     self.assertEquals('myspace.com:6221', friends[0].get_id())
     self.assertEquals('myspace.com:431404430', friends[1].get_id())
-   
-  
