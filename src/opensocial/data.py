@@ -33,12 +33,8 @@ def extract_fields(json):
   return json.get('entry') or json
 
 
-# TODO: Convert to dict (but leave get_field for deprecation).
-class Object(object):
+class Object(dict):
   """Generic container for opensocial.* objects."""
-
-  def __init__(self, fields):
-    self.fields = fields
 
   def get_field(self, name):
     """Retrieves a specific field value for this Object.
@@ -48,7 +44,7 @@ class Object(object):
     Returns: The field value.
 
     """ 
-    return self.fields.get(name)
+    return self.get(name)
 
 
 class Person(Object):
@@ -94,7 +90,7 @@ class Person(Object):
 class AppData(Object):
 
   def __init__(self, data):
-    self._data = data
+    super(AppData, self).__init__(data)
 
   @staticmethod
   def parse_json(json):
