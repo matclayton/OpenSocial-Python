@@ -56,4 +56,4 @@ VIEWER = data.Person.parse_json(VIEWER_FIELDS)
 FRIENDS = data.Collection.parse_json(FRIEND_COLLECTION_FIELDS,
                                      data.Person)
 
-NO_AUTH = { 'code': httplib.UNAUTHORIZED }
+NO_AUTH = { 'error' : { 'code': httplib.UNAUTHORIZED }}

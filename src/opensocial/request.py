@@ -151,7 +151,7 @@ class FetchAppDataRequest(Request):
 
   def __init__(self, user_id, group_id, app_id='@app', keys=None, params=None):
     params = params or {}
-    if fields:
+    if keys:
       params['fields'] = ','.join(fields)
     rest_path = '/'.join(('appdata', user_id, group_id, app_id))
     rest_request = RestRequestInfo(rest_path, params=params)

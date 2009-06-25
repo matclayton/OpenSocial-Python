@@ -151,7 +151,10 @@ class ContainerContext(object):
       batch = RequestBatch()
       batch.add_request(0, request)
       batch.send(self)
-      return batch.get(0)
+      response = batch.get(0)
+      if isinstance(response, Error):
+        raise response
+      return response
     else:
       return self._send_rest_request(request)
   
@@ -174,7 +177,10 @@ class ContainerContext(object):
       request individually.
       """
       for key, request in batch.requests.iteritems():
-        result = self._send_rest_request(request)
+        try:
+          result = self._send_rest_request(request)
+        except Error, e:
+          result = e
         batch._set_data(key, result)
   
   def _send_rest_request(self, request):
@@ -208,10 +214,16 @@ class ContainerContext(object):
     """Pull out all of the results and insert them into the batch object."""
     for response in json:
       id = response.get('id')
-      json = response.get('data')
       key = id_to_key_map[id]
-      request = batch.requests[key]
-      batch._set_data(key, request.process_json(json))
+      if 'error' in response:
+        code = response.get('error').get('code')
+        message = response.get('error').get('message')
+        error = BadResponseError(code, message)
+        batch._set_data(key, error)
+      else:
+        json = response.get('data')
+        request = batch.requests[key]
+        batch._set_data(key, request.process_json(json))
       
   def _send_http_request(self, http_request):
     if self.config.security_token:
@@ -231,12 +243,13 @@ class ContainerContext(object):
     if http_response.status == httplib.OK:
       json = simplejson.loads(http_response.content)
       # Check for any JSON-RPC 2.0 errors.
-      if 'code' in json:
-        code = json.get('code')
+      if 'error' in json:
+        code = json.get('error').get('code')
+        message = json.get('error').get('message')
         if code == httplib.UNAUTHORIZED:
           raise UnauthorizedRequestError(http_response)
         else:
-          raise BadResponseError(http_response)
+          raise BadResponseError(code, message)
       return json
     else:
       raise BadRequestError(http_response)

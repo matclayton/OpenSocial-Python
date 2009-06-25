@@ -31,8 +31,12 @@ class ConfigError(Error):
 
 class BadResponseError(Error):
   """Raised when the status code is not OK or data returned is invalid."""
-  def __init__(self, response):
-    self.response = response
+  def __init__(self, code, message=""):
+    self.code = code
+    self.message = message
+
+  def __str__(self):
+      return "Bad Response: %d - %s" % (self.code, self.message)
   
 
 class BadRequestError(Error):
