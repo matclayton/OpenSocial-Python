@@ -149,10 +149,12 @@ class FetchPersonRequest(FetchPeopleRequest):
 class FetchAppDataRequest(Request):
   """A request for handling fetching app data."""
 
-  def __init__(self, user_id, group_id, app_id='@app', keys=None, params=None):
+  def __init__(self, user_id, group_id, app_id='@app', fields=None, 
+               params=None):
     params = params or {}
-    if keys:
+    if fields:
       params['fields'] = ','.join(fields)
+    
     rest_path = '/'.join(('appdata', user_id, group_id, app_id))
     rest_request = RestRequestInfo(rest_path, params=params)
     
@@ -160,9 +162,63 @@ class FetchAppDataRequest(Request):
     params.update({'userId': user_id,
                    'groupId': group_id,
                    'appId': app_id,
-                   'keys': keys})
+                   'keys': fields})
     rpc_request = RpcRequestInfo('appdata.get', params=params)
     super(FetchAppDataRequest, self).__init__(rest_request,
+                                              rpc_request,
+                                              user_id)
+
+  def process_json(self, json):
+    """Construct the appropriate OpenSocial object from a JSON dict.
+    
+    Args:
+      json: dict The JSON structure.
+      
+    Returns: An AppData object.
+
+    """
+    return data.AppData.parse_json(json)
+
+
+class UpdateAppDataRequest(Request):
+  """A request for handling updating app data."""
+
+  def __init__(self, user_id, group_id, app_id='@app', fields=None, data={}, 
+               params=None):
+    params = params or {}
+    if fields:
+      params['fields'] = ','.join(fields)
+
+    params['data'] = simplejson.dumps(data)
+
+    #TODO: add support for rest
+    params.update({'userId': user_id,
+                   'groupId': group_id,
+                   'appId': app_id})
+    rpc_request = RpcRequestInfo('appdata.update', params=params)
+    super(UpdateAppDataRequest, self).__init__(None,
+                                              rpc_request,
+                                              user_id)
+
+  def process_json(self, json):
+    return json
+
+
+class DeleteAppDataRequest(Request):
+  """A request for handling deleting app data."""
+
+  def __init__(self, user_id, group_id, app_id='@app', fields=None, params=None):
+    params = params or {}
+    if fields:
+      params['fields'] = ','.join(fields)
+
+    #TODO: add support for rest
+    params.update({'userId': user_id,
+                   'groupId': group_id,
+                   'appId': app_id,
+                   'keys': params['fields']})
+    rpc_request = RpcRequestInfo('appdata.delete', params=params)
+    super(DeleteAppDataRequest, self).__init__(None,
                                               rpc_request,
                                               user_id)
 
