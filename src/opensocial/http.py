@@ -35,6 +35,7 @@ except:
 
 logging.basicConfig(level=logging.DEBUG)
 
+VERBOSE = 0
 
 def get_default_urlfetch():
   """Creates the default UrlFetch interface.
@@ -79,6 +80,10 @@ class UrlFetch(object):
     log_request(request)
     method = request.get_method()
     headers = request.get_headers()
+
+    if VERBOSE > 0:
+      logging.info("URL => %s", request.get_url())
+      
     req = urllib2.Request(request.get_url(),
                           data=request.get_post_body(),
                           headers=headers)
@@ -171,6 +176,9 @@ class Request(object):
     else:
       # Otherwise, use the oauth_body_hash extension to sign the request body.
       if self.post_body:
+        if VERBOSE > 0:
+          logging.info("post_body => %s" % str(self.post_body))
+          
         body_hash = b64encode(hashlib.sha1(self.get_post_body()).digest())
         params['oauth_body_hash'] = body_hash
       
@@ -178,6 +186,12 @@ class Request(object):
       self.set_parameter("xoauth_requestor_id", None)
     
     self.set_parameters(params)
+    if VERBOSE > 0:
+      key, raw = signature_method.build_signature_base_string(
+                     self.oauth_request, consumer, None)
+      logging.info("build_signature key => %s" % key)
+      logging.info("build_signature raw => %s" % raw)
+      
     self.oauth_request.sign_request(signature_method, consumer, None)
     
   def set_parameter(self, name, value):

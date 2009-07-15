@@ -241,6 +241,9 @@ class ContainerContext(object):
   def _handle_response(self, http_response):
     """ If status code "OK", then we can safely inspect the returned JSON."""
     if http_response.status == httplib.OK:
+      if http.VERBOSE > 0:
+        logging.info("http_response.content => %s" % http_response.content)
+        
       json = simplejson.loads(http_response.content)
       # Check for any JSON-RPC 2.0 errors.
       if 'error' in json:

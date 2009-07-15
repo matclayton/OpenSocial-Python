@@ -22,6 +22,7 @@ import hashlib
 import random
 import time
 import urlparse
+from types import ListType
 
 import data
 import http
@@ -177,7 +178,10 @@ class FetchAppDataRequest(Request):
     Returns: An AppData object.
 
     """
-    return data.AppData.parse_json(json)
+    if type(json) == ListType:
+      return json
+    else:
+      return data.AppData.parse_json(json)
 
 
 class UpdateAppDataRequest(Request):
@@ -189,7 +193,7 @@ class UpdateAppDataRequest(Request):
     if fields:
       params['fields'] = ','.join(fields)
 
-    params['data'] = simplejson.dumps(data)
+    params['data'] = data
 
     #TODO: add support for rest
     params.update({'userId': user_id,
@@ -207,7 +211,8 @@ class UpdateAppDataRequest(Request):
 class DeleteAppDataRequest(Request):
   """A request for handling deleting app data."""
 
-  def __init__(self, user_id, group_id, app_id='@app', fields=None, params=None):
+  def __init__(self, user_id, group_id, app_id='@app', fields=None, 
+               params=None):
     params = params or {}
     if fields:
       params['fields'] = ','.join(fields)
@@ -223,15 +228,7 @@ class DeleteAppDataRequest(Request):
                                               user_id)
 
   def process_json(self, json):
-    """Construct the appropriate OpenSocial object from a JSON dict.
-    
-    Args:
-      json: dict The JSON structure.
-      
-    Returns: An AppData object.
-
-    """
-    return data.AppData.parse_json(json)
+    return json
 
 
 class RestRequestInfo(object):
