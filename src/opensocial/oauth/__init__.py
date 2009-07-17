@@ -255,7 +255,7 @@ class OAuthRequest(object):
     # util function: turn url string into parameters, has to do some unescaping
     @staticmethod
     def _split_url_string(param_str):
-        parameters = cgi.parse_qs(param_str, keep_blank_values=False)
+        parameters = cgi.parse_qs(param_str, keep_blank_values=True)
         for k, v in parameters.iteritems():
             parameters[k] = urllib.unquote(v[0])
         return parameters
