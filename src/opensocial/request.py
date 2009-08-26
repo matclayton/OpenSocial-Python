@@ -257,6 +257,16 @@ class RestRequestInfo(object):
     return http.Request(url, method=self.method, signed_params=self.params)
 
 
+class TextRpcRequest(Request):
+  """ Represents an RPC request which is not configured with parameters, but
+  a raw text blob.  Intended for debugging or developer tools."""
+  def __init__(self, rpc_body):
+    self.__rpc_body = rpc_body;
+    
+  def get_rpc_body(self):
+    return simplejson.loads(self.__rpc_body)
+
+
 class RpcRequestInfo(object):
   """Represents a pending RPC request."""
 

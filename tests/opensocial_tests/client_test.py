@@ -100,6 +100,21 @@ class TestRpcRequest(unittest.TestCase):
     self.assertEquals('101', rpc_body['params']['userId'])
     self.assertEquals('@friends', rpc_body['params']['groupId'])
 
+  def test_text_request(self):
+    rpc_request = TextRpcRequest("""{
+      "method": "people.get", 
+      "id": "foo", 
+      "params": { 
+        "userId" : "101",
+        "groupId" : "@friends"
+      }
+    }""");
+    
+    rpc_body = rpc_request.get_rpc_body()
+    self.assertEquals('people.get', rpc_body['method'])
+    self.assertEquals('foo', rpc_body['id'])
+    self.assertEquals('101', rpc_body['params']['userId'])
+    self.assertEquals('@friends', rpc_body['params']['groupId'])
 
 class TestContainerContext(unittest.TestCase):
 
@@ -167,3 +182,4 @@ class TestContainerContext(unittest.TestCase):
   def test_bad_request(self):
     self.assertRaises(BadRequestError, self.container.fetch_friends, '103')
     self.assertRaises(BadRequestError, self.container.fetch_friends, '??')
+    
