@@ -260,11 +260,38 @@ class RestRequestInfo(object):
 class TextRpcRequest(Request):
   """ Represents an RPC request which is not configured with parameters, but
   a raw text blob.  Intended for debugging or developer tools."""
-  def __init__(self, rpc_body):
+  def __init__(self, rpc_body, requestor=None):
     self.__rpc_body = rpc_body;
-    
+    self.set_requestor(requestor)
+
   def get_rpc_body(self):
     return simplejson.loads(self.__rpc_body)
+
+  def get_requestor(self):
+    """Get the requestor id for this request.
+
+    Returns: The requestor's id.
+
+    """
+    return self.__requestor
+
+  def set_requestor(self, id):
+    """Set the requestor id for this request.
+
+    This does not accept any keywords such as @me.
+    TODO: Refactor the id check out of here, it feels wrong.
+
+    Args:
+      id: str The requestor's id.
+
+    """
+    if id and id[0] is not '@':
+      self.__requestor = id
+    else:
+      self.__requestor = None
+
+  def process_json(self, json):
+    return json
 
 
 class RpcRequestInfo(object):
