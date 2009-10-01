@@ -238,7 +238,7 @@ class CreateActivityRequest(Request):
   def __init__(self, user_id, activity, group_id='@self', app_id='@app', 
                params=None):
     params = params or {}
-    params['data'] = activity
+    params['activity'] = activity
 
     #TODO: add support for rest
     params.update({'userId': user_id,
