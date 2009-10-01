@@ -244,7 +244,7 @@ class CreateActivityRequest(Request):
     params.update({'userId': user_id,
                    'groupId': group_id,
                    'appId': app_id})
-    rpc_request = RpcRequestInfo('activity.create', params=params)
+    rpc_request = RpcRequestInfo('activities.create', params=params)
     super(CreateActivityRequest, self).__init__(None,
                                               rpc_request,
                                               user_id)

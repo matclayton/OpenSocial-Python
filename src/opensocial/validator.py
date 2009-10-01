@@ -105,7 +105,7 @@ class RsaSha1Validator(RequestValidator):
       
     Returns: bool True if the request validated, False otherwise.
     """
-    base_string = self.get_signature_base_string(method, url params)
+    base_string = self.get_signature_base_string(method, url, params)
     local_hash = hashlib.sha1(base_string).digest()
     
     if not params.has_key("oauth_signature"):
