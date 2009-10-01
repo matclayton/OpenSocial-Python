@@ -192,6 +192,8 @@ class UpdateAppDataRequest(Request):
     params = params or {}
     if fields:
       params['fields'] = ','.join(fields)
+    else: 
+      params['fields'] = ','.join(data.keys())
 
     params['data'] = data
 
@@ -229,6 +231,43 @@ class DeleteAppDataRequest(Request):
 
   def process_json(self, json):
     return json
+
+
+class CreateActivityRequest(Request):
+  """ A request for creating an activity. """
+  def __init__(self, user_id, activity, group_id='@self', app_id='@app', 
+               params=None):
+    params = params or {}
+    params['data'] = activity
+
+    #TODO: add support for rest
+    params.update({'userId': user_id,
+                   'groupId': group_id,
+                   'appId': app_id})
+    rpc_request = RpcRequestInfo('activity.create', params=params)
+    super(CreateActivityRequest, self).__init__(None,
+                                              rpc_request,
+                                              user_id)
+    
+  def process_json(self, json):
+    return json
+
+
+class FetchActivityRequest(Request):
+  def __init__(self, user_id, group_id='@self', app_id='@app', params=None):
+    params = params or {}
+    #TODO: add support for rest
+    params.update({'userId': user_id,
+                   'groupId': group_id,
+                   'appId': app_id,
+                  })
+    rpc_request = RpcRequestInfo('activities.get', params=params)
+    super(FetchActivityRequest, self).__init__(None,
+                                              rpc_request,
+                                              user_id)
+  
+  def process_json(self, json):
+    return data.Collection.parse_json(json, data.Activity)
 
 
 class RestRequestInfo(object):

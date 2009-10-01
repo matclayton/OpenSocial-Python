@@ -88,13 +88,23 @@ class Person(Object):
 
 
 class AppData(Object):
-
+  """Application data stored on the container."""
   def __init__(self, data):
     super(AppData, self).__init__(data)
 
   @staticmethod
   def parse_json(json):
     return AppData(extract_fields(json))
+
+
+class Activity(Object):
+  """An activity entry."""
+  def __init__(self, data):
+    super(Activity, self).__init__(data)
+    
+  @staticmethod
+  def parse_json(json): 
+    return Activity(extract_fields(json))
 
 
 class Collection(list):
