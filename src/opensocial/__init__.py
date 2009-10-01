@@ -29,7 +29,7 @@ import simplejson
 from data import *
 from errors import *
 from request import *
-
+from validator import *
 
 class ContainerConfig(object):
   """Setup parameters for connecting to a container."""
