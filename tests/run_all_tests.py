@@ -18,13 +18,13 @@
 __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
-import run_system_tests
+import run_online_tests
 import run_unit_tests
 
 
 def RunAllTests():
   run_unit_tests.RunUnitTests()
-  run_system_tests.RunSystemTests()
+  run_online_tests.RunOnlineTests()
 
 
 if __name__ == '__main__':

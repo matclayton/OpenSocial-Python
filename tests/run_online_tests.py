@@ -25,7 +25,7 @@ import opensocial_tests.partuza_test
 import opensocial_tests.oauth_test
 import opensocial_tests.google_sandbox_test
 
-def RunSystemTests():
+def RunOnlineTests():
   test_runner = module_test_runner.ModuleTestRunner()
   test_runner.modules = [
        opensocial_tests.orkut_test,
@@ -38,4 +38,4 @@ def RunSystemTests():
 
 
 if __name__ == '__main__':
-  RunSystemTests()
+  RunOnlineTests()
