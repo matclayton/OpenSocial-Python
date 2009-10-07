@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2007, 2008 Google Inc.
+# Copyright (C) 2009 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,51 +24,43 @@ import urllib
 from opensocial import http
 
 
-class ResponseRecord(object):
-  
-  def __init__(self, request, response):
-    self.request = request
-    self.response = response
-
-
 class MockUrlFetch(http.UrlFetch):
   """A mock UrlFetch implementation for unit tests.
   
-  Used to set canned responses for particular requests. The default canned
+  Used to set canned responses for urlfetch requests.  Responses are enqueued
+  one at a time, and returned in the order they were added.  The default canned
   response (Error 500) will be returned if a response is not found.
 
   """
-  
   def __init__(self):
-    self.records = []
+    self.responses = []
+    self.requests = []
     self.default_response = http.Response(httplib.INTERNAL_SERVER_ERROR, '')
 
-  def add_response(self, request, response):
-    """Adds a canned response for a given request.
+  def add_response(self, response):
+    """Enqueues a canned response.  Responses will be returned in order of 
+    being added to the MockUrlFetch object.
     
     Args:
-      request: An http.Request object used to trigger this response.
       response: An http.Response object that will be returned.
-
     """
-    self.records.append(ResponseRecord(request, response))
+    self.responses.append(response)
 
+  def get_request(self):
+    """Returns a request that was sent to this fetcher.  Requests will be 
+    returned in the order of being added to the MockUrlFetch object.
+    """
+    return self.requests.pop(0)
+    
   def fetch(self, request):
     """Perform the fake fetch.
     
-    Looks up the details of the specified request and returns a canned
-    response if one is found, otherwise 500 error.
-
+    Returns:
+      http.Response An enqueued response, if available, otherwise the default.
     """
-    response = self._lookup_request(request)
-    return response
+    self.requests.append(request)
+    if len(self.responses) > 0:
+      return self.responses.pop(0)
+    else:
+      return self.default_response
 
-  def _lookup_request(self, request):
-    url = request.get_url()
-    for record in self.records:
-      other_url = record.request.get_url()
-      if (record.request.get_method() == request.get_method() and
-          url == other_url and
-          record.request.post_body == request.post_body):
-        return record.response
-    return self.default_response

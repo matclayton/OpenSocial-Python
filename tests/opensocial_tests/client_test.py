@@ -31,6 +31,7 @@ TEST_CONFIG = ContainerConfig(
     server_rest_base='http://www.foo.com/rest/',
 )
 
+
 class TestHttp(unittest.TestCase):
   
   def setUp(self):
@@ -118,68 +119,95 @@ class TestRpcRequest(unittest.TestCase):
 
 class TestContainerContext(unittest.TestCase):
 
-  viewer_response = http.Response(httplib.OK, simplejson.dumps(
-      test_data.VIEWER_FIELDS))
-
   friends_response = http.Response(httplib.OK, simplejson.dumps(
       test_data.FRIEND_COLLECTION_FIELDS))
 
   noauth_response = http.Response(httplib.OK,
                                   simplejson.dumps(test_data.NO_AUTH))
 
-  def add_canned_response(self, request_url, http_response, requestor_id=None):
-    http_request = http.Request(request_url)
-    if requestor_id:
-      http_request.set_parameter('xoauth_requestor_id', requestor_id)
-    http_request.set_parameter('opensocial_method', 'GET')
-    self.urlfetch.add_response(http_request, http_response)
-
   def setUp(self):
     self.urlfetch = mock_http.MockUrlFetch()
     self.container = ContainerContext(TEST_CONFIG, self.urlfetch)
-
-    self.add_canned_response('http://www.foo.com/rest/people/@me/@self',
-                             TestContainerContext.viewer_response)
-
-    self.add_canned_response('http://www.foo.com/rest/people/@me/@friends',
-                             TestContainerContext.friends_response)
-
-    self.add_canned_response('http://www.foo.com/rest/people/102/@friends',
-                             TestContainerContext.noauth_response,
-                             requestor_id='102')
-
-    self.add_canned_response('http://www.foo.com/rest/people/103/@friends',
-                              http.Response(httplib.NOT_FOUND, 'Error'),
-                              requestor_id='103')
 
   def test_supports_rpc(self):
     self.assertEqual(False, self.container.supports_rpc())
     
   def test_fetch_person(self):
+    response = http.Response(httplib.OK, simplejson.dumps({
+      'entry': {
+        'id' : '101',
+        'name' : { 'givenName': 'Kenny', 'familyName': 'McCormick'}
+      },
+    }))
+    self.urlfetch.add_response(response)
+    
     person = self.container.fetch_person('@me')
-    self.assertEqual(test_data.VIEWER.get_id(), person.get_id())
-    self.assertEqual(test_data.VIEWER.get_display_name(),
-                     person.get_display_name())
+    
+    request = self.urlfetch.get_request()
+    self.assertEqual('101', person.get_id())
+    self.assertEqual('Kenny McCormick', person.get_display_name())
+    self.assertEqual('http://www.foo.com/rest/people/@me/@self', 
+                     request.get_normalized_url())
 
   def test_fetch_friends(self):
+    response = http.Response(httplib.OK, simplejson.dumps({
+      'startIndex': 0,
+      'totalResults': 3,
+      'entry': [
+        { 
+          'id': '102',
+          'name': {'givenName': 'Stan', 'familyName': 'Marsh'},
+        },
+        { 
+          'id': '103',
+          'name': {'givenName': 'Kyle', 'familyName': 'Broflovski'},
+        },
+        { 
+          'id': '104',
+          'name': {'givenName': 'Eric', 'familyName': 'Cartman'},
+        }
+      ]
+    }))
+    self.urlfetch.add_response(response)
+    
     friends = self.container.fetch_friends('@me')
-    self.assertEqual(friends.startIndex,
-                     test_data.FRIENDS.startIndex)
-    self.assertEqual(friends.totalResults,
-                     test_data.FRIENDS.totalResults)
-    for i in range(len(friends)):
-      person = friends[i]
-      test_person = test_data.FRIENDS[i]
-      self.assertEqual(person.get_id(), test_person.get_id())
-      self.assertEqual(person.get_display_name(),
-                       test_person.get_display_name())
+    
+    request = self.urlfetch.get_request()                     
+    self.assertEqual(0, friends.startIndex)
+    self.assertEqual(3, friends.totalResults)
+    self.assertEqual('102', friends[0].get_id())
+    self.assertEqual('Stan Marsh', friends[0].get_display_name())
+    self.assertEqual('103', friends[1].get_id())
+    self.assertEqual('Kyle Broflovski', friends[1].get_display_name())
+    self.assertEqual('104', friends[2].get_id())
+    self.assertEqual('Eric Cartman', friends[2].get_display_name())
+    self.assertEqual('http://www.foo.com/rest/people/@me/@friends', 
+                     request.get_normalized_url())
       
   def test_unauthorized_request(self):
+    response = http.Response(httplib.OK, simplejson.dumps({
+      'error' : { 'code': httplib.UNAUTHORIZED }
+    }))
+    self.urlfetch.add_response(response)
+    
     self.assertRaises(UnauthorizedRequestError,
                       self.container.fetch_friends,
                       '102')
+    
+    request = self.urlfetch.get_request()
+    self.assertEqual('102', request.get_parameter('xoauth_requestor_id'))
+    self.assertEqual('http://www.foo.com/rest/people/102/@friends', 
+                     request.get_normalized_url())
+
  
   def test_bad_request(self):
+    response = http.Response(httplib.NOT_FOUND, 'Error');
+    self.urlfetch.add_response(response)
+    
     self.assertRaises(BadRequestError, self.container.fetch_friends, '103')
-    self.assertRaises(BadRequestError, self.container.fetch_friends, '??')
+    
+    request = self.urlfetch.get_request()
+    self.assertEqual('103', request.get_parameter('xoauth_requestor_id'))
+    self.assertEqual('http://www.foo.com/rest/people/103/@friends', 
+                     request.get_normalized_url())
     
