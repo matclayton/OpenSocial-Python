@@ -42,9 +42,9 @@ class TestOrkut(unittest.TestCase):
     self.assertEquals(self.user_id, user.get_id())
 
   def validate_friends(self, friends):
-    self.assertEquals(6, len(friends))
+    self.assertEquals(5, len(friends))
     self.assertEquals(0, friends.startIndex)
-    self.assertEquals(6, friends.totalResults)
+    self.assertEquals(5, friends.totalResults)
     self.assertEquals('13314698784882897227', friends[0].get_id())
     self.assertEquals('04285289033838943214', friends[1].get_id())
     
