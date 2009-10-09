@@ -19,11 +19,11 @@ __author__ = 'davidbyttow@google.com (David Byttow)'
 
 
 import run_online_tests
-import run_unit_tests
+import run_offline_tests
 
 
 def RunAllTests():
-  run_unit_tests.RunUnitTests()
+  run_offline_tests.RunOfflineTests()
   run_online_tests.RunOnlineTests()
 
 
