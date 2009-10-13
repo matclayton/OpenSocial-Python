@@ -21,6 +21,7 @@ import hashlib
 import urllib
 import oauth
 import hmac
+import logging
 
 from Crypto.PublicKey import RSA
 from Crypto.Util import number
@@ -45,7 +46,7 @@ class RequestValidator(object):
     oauth_request = oauth.OAuthRequest(
         http_method=method.upper(), 
         http_url=url, 
-        parameters=params)
+        parameters=encoded_params)
 
     base_str = '&'.join((
         oauth.escape(oauth_request.get_normalized_http_method()),

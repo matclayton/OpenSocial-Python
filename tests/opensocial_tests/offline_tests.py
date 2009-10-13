@@ -117,6 +117,105 @@ class TestRpcRequest(unittest.TestCase):
     self.assertEquals('101', rpc_body['params']['userId'])
     self.assertEquals('@friends', rpc_body['params']['groupId'])
 
+class TestValidator(unittest.TestCase):
+  def test_validate_rsa(self):
+    public_key_str = ("0x00deb51922b2a31dfea37045540385be3b39343ff5b384e105" +
+                      "339a78e534d13dacf7adad7c20117e180f5f25b702c8730794a0" +
+                      "eaa6a9e69e37b53fad0a1fc6ffcb838a6d8592de2456aed90270" +
+                      "87b4cea8df20f5ae7a00b758043708f0a9a2f68f4923d43e19ff" +
+                      "e358872ad90700782fbb9a9acdbe207bdc35cddbe30e8fecb7d5")
+    
+    validator = RsaSha1Validator(public_key_str)
+
+    url = "http://graargh.returnstrue.com/buh/fetchme.php"
+    params = {
+      'oauth_body_hash'            : '2jmj7l5rSw0yVb/vlWAYkK/YBwk=',
+      'opensocial_owner_id'        : 'john.doe',
+      'opensocial_viewer_id'       : 'john.doe',
+      'opensocial_app_id'          : '3995',
+      'opensocial_app_url'         : 'http://localhost/~kurrik/makeRequest.xml',
+      'oauth_version'              : '1.0',
+      'oauth_timestamp'            : '1255470195',
+      'oauth_consumer_key'         : "kurrik",
+      'oauth_signature_method'     : 'RSA-SHA1',
+      'oauth_nonce'                : '1255470195040198000',
+      'oauth_signature'            : 'mFxgSmrgYxo8GbJji/6pbjTVIEBoVC6tHHp9QSwORqiPg2I1mG7t6M100XVSowpMpxO76miKOTBxQmeCs26QmBQP1uf9U1yMHs5hqj3b+TbkyIQLflKl9A+WoGr2xFQoQ0i9S+Pq2L3CXS7pFuYqom2UbokixfjRAmtBztyLJQE=',
+      'xoauth_public_key'          : 'openssl_key_pk8_shindig.pem',
+      'xoauth_signature_publickey' : 'openssl_key_pk8_shindig.pem',
+    }
+    is_valid_request = validator.validate("GET", url, params)
+    self.assertTrue(is_valid_request)
+    
+  def test_validate_invalid_rsa(self):
+    # invalid public key
+    public_key_str = ("0x00abc51922b2a31dfea37045540385be3b39343ff5b384e105" +
+                      "339a78e534d13dacf7adad7c20117e180f5f25b702c8730794a0" +
+                      "eaa6a9e69e37b53fad0a1fc6ffcb838a6d8592de2456aed90270" +
+                      "87b4cea8df20f5ae7a00b758043708f0a9a2f68f4923d43e19ff" +
+                      "e358872ad90700782fbb9a9acdbe207bdc35cddbe30e8fecb7d5")
+
+    validator = RsaSha1Validator(public_key_str)
+
+    url = "http://graargh.returnstrue.com/buh/fetchme.php"
+    params = {
+      'oauth_body_hash'            : '2jmj7l5rSw0yVb/vlWAYkK/YBwk=',
+      'opensocial_owner_id'        : 'john.doe',
+      'opensocial_viewer_id'       : 'john.doe',
+      'opensocial_app_id'          : '3995',
+      'opensocial_app_url'         : 'http://localhost/~kurrik/makeRequest.xml',
+      'oauth_version'              : '1.0',
+      'oauth_timestamp'            : '1255470195',
+      'oauth_consumer_key'         : "kurrik",
+      'oauth_signature_method'     : 'RSA-SHA1',
+      'oauth_nonce'                : '1255470195040198000',
+      'oauth_signature'            : 'mFxgSmrgYxo8GbJji/6pbjTVIEBoVC6tHHp9QSwORqiPg2I1mG7t6M100XVSowpMpxO76miKOTBxQmeCs26QmBQP1uf9U1yMHs5hqj3b+TbkyIQLflKl9A+WoGr2xFQoQ0i9S+Pq2L3CXS7pFuYqom2UbokixfjRAmtBztyLJQE=',
+      'xoauth_public_key'          : 'openssl_key_pk8_shindig.pem',
+      'xoauth_signature_publickey' : 'openssl_key_pk8_shindig.pem',
+    }
+    is_valid_request = validator.validate("GET", url, params)
+    self.assertFalse(is_valid_request)
+    
+  def test_validate_hmac(self):
+    validator = HmacSha1Validator("I'm a consumer secret!")
+    
+    url = "http://graargh.returnstrue.com/buh/fetchme.php"
+    params = {
+      'oauth_body_hash'        : '2jmj7l5rSw0yVb/vlWAYkK/YBwk=',
+      'opensocial_owner_id'    : 'john.doe',
+      'opensocial_viewer_id'   : 'john.doe',
+      'opensocial_app_id'      : '3995',
+      'opensocial_app_url'     : 'http://localhost/~kurrik/makeRequest.xml',
+      'oauth_version'          : '1.0',
+      'oauth_timestamp'        : '1255468709',
+      'oauth_consumer_key'     : "I'm a consumer key!",
+      'oauth_signature_method' : 'HMAC-SHA1',
+      'oauth_nonce'            : '1255468709246019000',
+      'oauth_signature'        : '0CoUIWCAaBtjJqW3wQ0DJXNEa+o=',
+    }
+    is_valid_request = validator.validate("GET", url, params)
+    self.assertTrue(is_valid_request)
+    
+  def test_validate_invalid_hmac(self):
+    # invalid consumer secret
+    validator = HmacSha1Validator("I'm an incorrect consumer secret!")
+
+    url = "http://graargh.returnstrue.com/buh/fetchme.php"
+    params = {
+      'oauth_body_hash'        : '2jmj7l5rSw0yVb/vlWAYkK/YBwk=',
+      'opensocial_owner_id'    : 'john.doe',
+      'opensocial_viewer_id'   : 'john.doe',
+      'opensocial_app_id'      : '3995',
+      'opensocial_app_url'     : 'http://localhost/~kurrik/makeRequest.xml',
+      'oauth_version'          : '1.0',
+      'oauth_timestamp'        : '1255468709',
+      'oauth_consumer_key'     : "I'm a consumer key!",
+      'oauth_signature_method' : 'HMAC-SHA1',
+      'oauth_nonce'            : '1255468709246019000',
+      'oauth_signature'        : '0CoUIWCAaBtjJqW3wQ0DJXNEa+o=',
+    }
+    is_valid_request = validator.validate("GET", url, params)
+    self.assertFalse(is_valid_request)
+    
 class TestContainerContext(unittest.TestCase):
 
   friends_response = http.Response(httplib.OK, simplejson.dumps(
