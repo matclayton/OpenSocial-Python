@@ -23,8 +23,8 @@ import oauth
 import hmac
 import logging
 
-from Crypto.PublicKey import RSA
-from Crypto.Util import number
+from opensocial.Crypto.PublicKey import RSA
+from opensocial.Crypto.Util import number
 
 class RequestValidator(object):
   def get_signature_base_string(self, method, url, params):
