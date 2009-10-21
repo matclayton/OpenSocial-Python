@@ -256,3 +256,39 @@ class ContainerContext(object):
       return json
     else:
       raise BadRequestError(http_response)
+
+
+class OrkutSandboxContext(ContainerContext):
+  """The context for accessing orkut's sandbox."""
+  def __init__(self, config, url_fetch=None):
+    local_config = {
+      'server_rpc_base' : 'http://sandbox.orkut.com/social/rpc/',
+      'server_rest_base' : 'http://sandbox.orkut.com/social/rest/',
+      'sign_with_body' : True,
+    }
+    local_config.update(config)
+    super(OrkutSandboxContext, self).__init__(local_config, url_fetch)
+
+
+class OrkutContext(OrkutSandboxContext):
+  """The context for accessing orkut's production servers."""
+  def __init__(self, config, url_fetch=None):
+    local_config = {
+      'server_rpc_base' : 'http://www.orkut.com/social/rpc/',
+      'server_rest_base' : 'http://ww.orkut.com/social/rest/',
+    }
+    local_config.update(config)
+    super(OrkutContext, self).__init__(local_config, url_fetch)
+
+
+class GoogleFriendConnectContext(ContainerContext):
+  """The context for accessing Google Friend Connect's production servers."""
+  def __init__(self, config, url_fetch=None):
+    local_config = {
+      'server_rpc_base' : 'http://www.google.com/friendconnect/api/',
+      'server_rest_base' : 'http://www.google.com/friendconnect/api/rpc',
+      'sign_with_body' : True,
+    }
+    local_config.update(config)
+    super(GoogleFriendConnectContext, self).__init__(local_config, url_fetch)
+  
