@@ -97,6 +97,155 @@ class Request(object):
     return self.rpc_request.get_rpc_body()
 
 
+class FetchSupportedFields(Request):
+    """A request class for fetching supported fields. """
+    def __init__(self, user_id, osobject):
+        rest_request = RestRequestInfo('/'.join((osobject, '@supportedFields')),'GET')
+        super(FetchSupportedFields, self).__init__(rest_request,
+                                             None,
+                                             user_id)
+    def process_json(self, json):
+        """Construct the appropriate OpenSocial object from a JSON dict.
+        Args:
+        json: dict The JSON structure.
+        Returns: a Collection of Person objects.
+        """
+        return json
+
+
+class FetchGroupRequest(Request):
+    """A request for handling group"""
+    def __init__(self, user_id, params=None):
+        params = params or {}
+        rest_request = RestRequestInfo('/'.join(('groups', user_id)),'GET', params )
+       
+        super(FetchGroupRequest, self).__init__(rest_request,
+                                             None,
+                                             user_id)
+    
+    def process_json(self, json):
+        """Construct the appropriate OpenSocial object from a JSON dict.
+        Args:
+        json: dict The JSON structure.
+        Returns: a Collection of Person objects.
+        """
+        return data.Collection.parse_json(json, data.Group)
+    
+class FetchAlbumRequest(Request):
+    """A request for handling Album"""
+    
+    def __init__(self, user_id, albumid=None, params=None):
+        params = params or {}
+        if albumid !=  None:
+            rest_request = RestRequestInfo('/'.join(('albums', user_id,'@self', albumid)),'GET', params )
+        else:
+            rest_request = RestRequestInfo('/'.join(('albums', user_id,'@self')),'GET', params )
+            
+        super(FetchAlbumRequest, self).__init__(rest_request,
+                                             None,
+                                             user_id)
+    
+    def process_json(self, json):
+        """Construct the appropriate OpenSocial object from a JSON dict.
+        Args:
+        json: dict The JSON structure.
+        Returns: a Collection of Person objects.
+        """
+        json_list = json.get('album') 
+        
+        if json_list != None:
+            """ this is  individual album """
+            return data.Album(json_list)
+        
+        return data.Collection.parse_json(json, data.Album )
+    
+    
+class FetchMediaItemsRequest(Request):
+    """A request for handling Album"""
+    
+    def __init__(self, user_id, albumid=None, mediaitemid=None, params=None):
+        params = params or {}
+        if mediaitemid !=  None:
+            rest_request = RestRequestInfo('/'.join(('mediaitems', user_id,'@self', albumid, mediaitemid)),'GET', params )
+        else:
+            rest_request = RestRequestInfo('/'.join(('mediaitems', user_id,'@self', albumid)),'GET', params )
+            
+        super(FetchMediaItemsRequest, self).__init__(rest_request,
+                                             None,
+                                             user_id)
+    
+    def process_json(self, json):
+        """Construct the appropriate OpenSocial object from a JSON dict.
+        Args:
+        json: dict The JSON structure.
+        Returns: a Collection of Person objects.
+        """
+        json_list = json.get('mediaItem') 
+        
+        if json_list != None:
+            """ this is  individual album """
+            return data.MediaItem(json_list)
+        
+        return data.Collection.parse_json(json, data.MediaItem )
+    
+    
+class FetchStatusMoodRequest(Request):
+    """A request for handling Statusmoodcomments"""
+    
+    def __init__(self, user_id, params=None):
+        params = params or {}
+        rest_request = RestRequestInfo('/'.join(('statusmood', user_id,'@self')),'GET', params )
+       
+        super(FetchStatusMoodRequest, self).__init__(rest_request,
+                                                     None,
+                                                     user_id)
+            
+    def process_json(self, json):
+        """Construct the appropriate OpenSocial object from a JSON dict.
+        Args:
+        json: dict The JSON structure.
+        Returns: a Collection of Person objects.
+        """
+        return data.StatusMood(json)
+
+class FetchStatusMoodCommentsRequest(Request):
+    """A request for handling StatusmoodcommentsRequests"""
+    
+    def __init__(self, user_id, params=None):
+        params = params or {}
+        rest_request = RestRequestInfo('/'.join(('statusMoodComments', user_id,'@self')),'GET', params )
+       
+        super(FetchStatusMoodCommentsRequest, self).__init__(rest_request,
+                                                     None,
+                                                     user_id)
+            
+    def process_json(self, json):
+        """Construct the appropriate OpenSocial object from a JSON dict.
+        Args:
+        json: dict The JSON structure.
+        Returns: a Collection of statusmoodcomments objects objects.
+        """
+        return data.Collection.parse_json(json, data.StatusMoodComments)
+    
+    
+class FetchProfileCommentsRequest(Request):
+    """A request for handling profile comments"""
+    
+    def __init__(self, user_id, params=None):
+        params = params or {}
+        rest_request = RestRequestInfo('/'.join(('profilecomments', user_id,'@self')),'GET', params )
+        super(FetchProfileCommentsRequest, self).__init__(rest_request,
+                                                     None,
+                                                     user_id)
+            
+    def process_json(self, json):
+        """Construct the appropriate OpenSocial object from a JSON dict.
+        Args:
+        json: dict The JSON structure.
+        Returns: a Collection of statusmoodcomments objects objects.
+        """
+        return data.Collection.parse_json(json, data.ProfileComments)        
+
 class FetchPeopleRequest(Request):    
   """A request for handling fetching a collection of people."""
   
@@ -233,6 +382,47 @@ class DeleteAppDataRequest(Request):
     return json
 
 
+
+
+class CreateNotificationRequest(Request):
+    """ A request for creating an Notification. """
+    def __init__(self, user_id, recipients, mediaitems = None, templateParameters = None,  
+               params=None):
+
+        params = params or {}
+        bodycontent = {}
+        if mediaitems !=None:
+            itemlist =[]
+            for mediaitem in  mediaitems:
+                itemdict = {}
+                itemdict['msMediaItemUri'] = mediaitem;
+                itemlist.append(itemdict);
+                
+            bodycontent['mediaItems'] = itemlist
+            bodycontent['recipientIds'] = recipients
+            bodycontent['templateParameters'] = templateParameters
+        
+        #if user_id != "@me": 
+        #    params['xoauth_requestor_id'] = user_id;
+        
+        rest_request = RestRequestInfo('/'.join(('notifications', user_id,'@self')),'POST', params, bodycontent, False)
+        super(CreateNotificationRequest, self).__init__(rest_request,
+                                                  None,
+                                                  user_id)
+        
+    def process_json(self, json):
+        return json
+
+class CreateAlbumRequest(Request):
+  def __init__(self, user_id, body, params = None):
+    params = params or {}
+    rest_request = RestRequestInfo('/'.join(('albums', user_id,'@self')),'POST', params, body , False)
+    super(CreateAlbumRequest, self ).__init__(rest_request, None, user_id)
+    pass
+    
+  def process_json(self, json):
+    return json
+
 class CreateActivityRequest(Request):
   """ A request for creating an activity. """
   def __init__(self, user_id, activity, group_id='@self', app_id='@app', 
@@ -254,7 +444,7 @@ class CreateActivityRequest(Request):
 
 
 class FetchActivityRequest(Request):
-  def __init__(self, user_id, group_id='@self', app_id='@app', params=None):
+  def __init__(self, user_id, group_id='@self', app_id=None, params=None):
     params = params or {}
     #TODO: add support for rest
     params.update({'userId': user_id,
@@ -262,7 +452,12 @@ class FetchActivityRequest(Request):
                    'appId': app_id,
                   })
     rpc_request = RpcRequestInfo('activities.get', params=params)
-    super(FetchActivityRequest, self).__init__(None,
+    if app_id != None:
+      rest_request = RestRequestInfo('/'.join(('activities', user_id,'@self', app_id)),'GET', params)
+    else:
+      rest_request = RestRequestInfo('/'.join(('activities', user_id,'@self')),'GET', params)
+    
+    super(FetchActivityRequest, self).__init__(rest_request,
                                               rpc_request,
                                               user_id)
   
@@ -273,10 +468,12 @@ class FetchActivityRequest(Request):
 class RestRequestInfo(object):
   """Represents a pending REST request."""
 
-  def __init__(self, path, method='GET', params=None):
+  def __init__(self, path, method='GET', params=None, body=None, body_hash=True):
     self.method = method
     self.path = path
     self.params = params or {}
+    self.body = body
+    self.body_hash = body_hash
 
   def make_http_request(self, url_base, query_params=None):
     """Generates a http.Request object for the UrlFetch interface.
@@ -293,8 +490,8 @@ class RestRequestInfo(object):
     url = url_base + self.path
     if query_params:
       self.params.update(query_params)
-    return http.Request(url, method=self.method, signed_params=self.params)
 
+    return http.Request(url, method=self.method, signed_params=self.params, post_body=self.body, add_bodyhash=self.body_hash)
 
 class TextRpcRequest(Request):
   """ Represents an RPC request which is not configured with parameters, but

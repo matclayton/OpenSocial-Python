@@ -107,6 +107,18 @@ class ContainerContext(object):
     """
     return self.allow_rpc and self.config.server_rpc_base is not None
   
+  def fetch_supportedfields(self, user_id='@me', osobject='' ):
+    """Fetches a supported fields for given object. 
+    Args:
+      user_id: str The person's container-specific id.
+      osobject: resource\method to which supported fields need to be retrieved .
+    
+    Returns: A json object containing supported fields.
+    """
+    request = FetchSupportedFields(user_id, osobject)
+    return self.send_request(request)
+  
+  
   def fetch_person(self, user_id='@me', fields=None):
     """Fetches a person by user id.
     
@@ -132,6 +144,141 @@ class ContainerContext(object):
 
     """
     request = FetchPeopleRequest(user_id, '@friends', fields=fields)
+    return self.send_request(request)
+
+  def fetch_groups(self, user_id='@me', params=None):
+    """Fetches catagories created by user id.
+    
+    Args:
+      user_id: str The person's container-specific id.
+      params: dict (optional) Additional query parameters.
+      
+    Returns: A Group object for the specified user.
+
+    """
+    
+    request = FetchGroupRequest(user_id,params)
+    return self.send_request(request)
+
+  def fetch_albums(self, user_id='@me', albumid = None, params=None):
+    """Fetches albums created by user id.
+
+    Args:
+      user_id: str The person's container-specific id.
+      albumid: str albumid (optional) that needs to be fetched.
+      params: dict (optional) Additional fields to that need to be passed
+      
+    Returns: A album objects for the specified user Id.
+
+    """
+
+    request = FetchAlbumRequest(user_id, albumid, params)
+    return self.send_request(request)
+
+  def fetch_mediaitems(self, user_id='@me', albumid = None, mediaitemid=None, params=None):
+    """Fetches mediaitems created by user id.
+
+    Args:
+      user_id: str The person's container-specific id.
+      albumid: str albumid of the mediaitem that needs to be fetched.
+      mediaitemid:str  mediaitem that needs to be fetched.
+      params: dict (optional) Additional fields to that need to be passed
+      
+    Returns: A collection of mediaitem object representing the specified user id.
+
+    """
+
+    request = FetchMediaItemsRequest(user_id, albumid, mediaitemid, params)
+    return self.send_request(request)
+
+  def fetch_activity(self, user_id='@me', group='@self', app = None, params=None):
+    """Fetches activities created by user id.
+
+    Args:
+       user_id: str  The person's container-specific id.
+       group:str  user specified selector.
+      fields: list (optional) List of fields to retrieve.
+      
+    Returns: A collection of mediaitem object representing the specified user id.
+
+    """
+
+    request = FetchActivityRequest(user_id, group, app, params)
+    return self.send_request(request)
+
+  def create_notification(self, user_id, recipients, mediaitems = None, templateParameters = None, 
+                          params=None):
+        """Creates app notification.
+    
+        Args:
+          user_id: str The person's container-specific id.
+          recipients: list of recipient to whom the notifications needs to be sent
+          mediaitems: list of media items associated with the 
+          templateParameters: list of dictionary items containing key and value fields
+          params: dict (optional) Additional fields to that need to be passed
+          
+        Returns: a json object containing notification object id and url.
+    
+        """
+
+        request = CreateNotificationRequest(user_id, recipients, mediaitems, templateParameters, params)
+        
+        return self.send_request(request)
+    
+  def create_album(self, user_id, params):
+        """Creates app notification.
+    
+        Args:
+          user_id: str The person's container-specific id.
+          params: dict  containing the query params kvp need for album creation like caption,mediaiteamcount etc
+          
+        Returns: a json object containing notification object id and url.
+    
+        """
+
+        request = CreateAlbumRequest(user_id,params)
+        return self.send_request(request)
+
+ 
+  def fetch_statusmood(self, user_id='@me', params=None):
+    """Fetches statusmood created by user id.
+    
+    Args:
+      user_id: str The person's container-specific id.
+      parama: (optional) .
+      
+    Returns: A statusmood object representing the specified user id.
+
+    """
+    
+    request = FetchStatusMoodRequest(user_id,params)
+    return self.send_request(request)
+
+  def fetch_statusmoodcomments(self, user_id='@me', params=None):
+    """Fetches fetch_statusmoodcomments on users profile.
+    
+    Args:
+      user_id: str The person's container-specific id.
+      parama: (optional) .
+      
+    Returns: A fetch_statusmoodcomments object representing the specified user id.
+
+    """
+    
+    request = FetchStatusMoodCommentsRequest(user_id,params)
+    return self.send_request(request)
+
+  def fetch_profilecomments(self, user_id='@me', params=None):
+    """Fetches fetch_profile on users profile.
+    
+    Args:
+      user_id: str The person's container-specific id.
+      parama: (optional) .
+      
+    Returns: A profile comment object representing the specified user id.
+
+    """
+    request = FetchProfileCommentsRequest(user_id,params)
     return self.send_request(request)
 
   def send_request(self, request, use_rest=False):
@@ -188,7 +335,7 @@ class ContainerContext(object):
     http_response = self._send_http_request(http_request)
     json = self._handle_response(http_response)
     return request.process_json(json)
-    
+
   def _send_rpc_requests(self, batch):
     rpcs = []
     id_to_key_map = {}
@@ -257,7 +404,6 @@ class ContainerContext(object):
     else:
       raise BadRequestError(http_response)
 
-
 class OrkutSandboxContext(ContainerContext):
   """The context for accessing orkut's sandbox."""
   def __init__(self, config, url_fetch=None):
@@ -291,4 +437,4 @@ class GoogleFriendConnectContext(ContainerContext):
     }
     local_config.update(config)
     super(GoogleFriendConnectContext, self).__init__(local_config, url_fetch)
-  
+

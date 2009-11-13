@@ -51,6 +51,7 @@ class Person(Object):
   """An opensocial.Person representation."""
 
   def __init__(self, fields):
+    fields = fields.get('person') or fields 
     super(Person, self).__init__(fields)
 
   def get_id(self):
@@ -86,6 +87,80 @@ class Person(Object):
     """
     return Person(extract_fields(json))
 
+class Group(Object):
+    """Group object."""
+    def __init__(self, data):
+        if data !=None:
+            data = data.get('group') or data 
+        super(Group, self).__init__(data)
+
+    def get_title(self):
+        return self['title'];
+      
+    def get_id(self):
+        return self['id']
+
+    @staticmethod
+    def parse_json(json):
+        return Group(extract_fields(json))
+    
+class StatusMood(Object):
+    """StatusMood object."""
+    def __init__(self, data):
+        super(StatusMood, self).__init__(data)
+
+    @staticmethod
+    def parse_json(json):
+        return StatusMood(extract_fields(json))
+    
+class StatusMoodComments(Object):
+    """StatusMoodComments object."""
+    def __init__(self, data):
+        super(StatusMoodComments, self).__init__(data)
+
+    @staticmethod
+    def parse_json(json):
+        return StatusMoodComments(extract_fields(json))
+    
+class ProfileComments(Object):
+    """StatusMoodComments object."""
+    def __init__(self, data):
+        super(ProfileComments, self).__init__(data)
+
+    @staticmethod
+    def parse_json(json):
+        return ProfileComments(extract_fields(json))
+    
+class Album(Object):
+    """Album object."""
+    def __init__(self, data):
+        if data !=None:
+            data = data.get('album') or data
+        super(Album, self).__init__(data)
+
+    @staticmethod
+    def parse_json(json):
+        return Album(extract_fields(json))
+    
+class MediaItem(Object):
+    """MediaItem object."""
+    def __init__(self, data):
+        if data !=None:
+            data = data.get('mediaItem') or data
+        super(MediaItem, self).__init__(data)
+
+    @staticmethod
+    def parse_json(json):
+        return MediaItem(extract_fields(json))
+    
+class Notification(Object):
+    """NotificationItem object."""
+    def __init__(self, data):
+        super(Notification, self).__init__(data)
+
+    @staticmethod
+    def parse_json(json):
+        return Notification(extract_fields(json))
 
 class AppData(Object):
   """Application data stored on the container."""
@@ -100,6 +175,8 @@ class AppData(Object):
 class Activity(Object):
   """An activity entry."""
   def __init__(self, data):
+    if data !=None:
+      data = data.get('activity') or data 
     super(Activity, self).__init__(data)
     
   @staticmethod
@@ -139,6 +216,7 @@ class Collection(list):
     total = json.get('totalResults')
     items = []
     json_list = json.get('entry') or json.get('list')      
-    for fields in json_list:
-      items.append(cls(fields))
+    if json_list != None:
+        for fields in json_list:
+            items.append(cls(fields))
     return Collection(items, start, total)

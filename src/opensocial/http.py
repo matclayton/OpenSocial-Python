@@ -131,12 +131,13 @@ class Request(object):
 
   """
 
-  def __init__(self, url, method='GET', signed_params=None, post_body=None):
+  def __init__(self, url, method='GET', signed_params=None, post_body=None, add_bodyhash=True):
     self.post_body = post_body or None
     """OAuth library will not create a request unless there is at least one
     parameter. So we are going to set at least one explicitly.
     """
     self.use_body_as_signing_parameter = False
+    self.add_bodyhash = add_bodyhash;
     params = signed_params or {}
     params['opensocial_method'] = method
     self.oauth_request = oauth.OAuthRequest.from_request(method, url,
@@ -177,11 +178,12 @@ class Request(object):
       # Otherwise, use the oauth_body_hash extension to sign the request body.
       if self.post_body:
         if VERBOSE > 0:
-          logging.info("post_body => %s" % str(self.post_body))
-          
-        body_hash = b64encode(hashlib.sha1(self.get_post_body()).digest())
-        params['oauth_body_hash'] = body_hash
-      
+            logging.info("post_body => %s" % str(self.post_body))
+                  
+        if self.add_bodyhash:
+            body_hash = b64encode(hashlib.sha1(self.get_post_body()).digest())
+            params['oauth_body_hash'] = body_hash
+  
     if self.get_security_token():
       self.set_parameter("xoauth_requestor_id", None)
     

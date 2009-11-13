@@ -24,12 +24,14 @@ import opensocial_tests.myspace_test
 import opensocial_tests.partuza_test
 import opensocial_tests.oauth_test
 import opensocial_tests.google_sandbox_test
+import opensocial_tests.myspace09_test
 
 def RunOnlineTests():
   test_runner = module_test_runner.ModuleTestRunner()
   test_runner.modules = [
        opensocial_tests.orkut_test,
        opensocial_tests.myspace_test,
+       opensocial_tests.myspace09_test,
        opensocial_tests.partuza_test,                  
        opensocial_tests.oauth_test,
        opensocial_tests.google_sandbox_test,

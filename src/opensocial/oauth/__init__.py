@@ -272,7 +272,7 @@ class OAuthServer(object):
         self.signature_methods = signature_methods or {}
 
     def set_data_store(self, oauth_data_store):
-        self.data_store = data_store
+        self.data_store = oauth_data_store
 
     def get_data_store(self):
         return self.data_store
